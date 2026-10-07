@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Habit Tracker</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#070914">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+:root{--bg:#070914;--card:#0d1226;--line:#232a4a;--tx:#e8ecff;--mu:#7d86b0;--w1:#2f7bff;--w2:#37e05a;--w3:#ff2e8a;--w4:#ffb020;--w5:#b6e03a;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#eef0fa;--card:#fff;--line:#d3d8ee;--tx:#14183a;--mu:#5d6590}}
+:root[data-theme="dark"]{--bg:#070914;--card:#0d1226;--line:#232a4a;--tx:#e8ecff;--mu:#7d86b0}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:12px}
+.top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px}
+h1{font-size:18px;letter-spacing:.2em;margin:0;padding:8px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+.nav{display:flex;align-items:center;gap:8px}
+button{background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer;font:inherit}
+button:active{transform:scale(.96)}
+.mo{min-width:130px;text-align:center;font-weight:600}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:12px}
+.scroll{overflow-x:auto}
+table{border-collapse:separate;border-spacing:3px;min-width:max-content}
+th,td{padding:0;text-align:center}
+.wk{font-size:11px;font-weight:700;padding:5px;border-radius:6px;letter-spacing:.05em}
+.dn{font-size:10px;color:var(--mu);line-height:1.1}
+.name{position:sticky;left:0;z-index:2;background:var(--card);text-align:left;min-width:150px;padding-right:6px}
+.name input{width:100%;background:transparent;border:0;border-bottom:1px dashed var(--line);color:var(--tx);font:inherit;padding:3px 0}
+.cb{width:20px;height:20px;border-radius:5px;border:2px solid var(--c);background:transparent;cursor:pointer;opacity:.55;transition:.15s;display:block;margin:auto}
+.cb:hover{opacity:1}
+.cb.on{background:var(--c);opacity:1;box-shadow:0 0 8px var(--c)}
+.cb.today{outline:2px solid var(--tx);outline-offset:1px}
+.cb.off{visibility:hidden}
+.goal,.st,.cnt{font-size:12px;font-variant-numeric:tabular-nums;min-width:38px;padding:0 4px}
+.goal input{width:36px;background:transparent;color:var(--tx);border:1px solid var(--line);border-radius:5px;text-align:center;font:inherit}
+.fire{color:var(--w4);font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+h2{font-size:12px;letter-spacing:.15em;color:var(--mu);margin:0 0 10px;text-transform:uppercase}
+.rings{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+.ring{width:74px;height:74px;border-radius:50%;display:grid;place-items:center;position:relative}
+.ring::after{content:"";position:absolute;inset:8px;border-radius:50%;background:var(--card)}
+.ring b{position:relative;z-index:1;font-size:14px}
+.rl{text-align:center;font-size:11px;color:var(--mu);margin-top:4px}
+.bar{display:grid;grid-template-columns:90px 1fr 38px;gap:8px;align-items:center;margin:6px 0;font-size:12px}
+.bar i{display:block;height:8px;border-radius:5px;background:var(--line);overflow:hidden}
+.bar i u{display:block;height:100%;background:linear-gradient(90deg,var(--w1),var(--w3));border-radius:5px;transition:width .3s}
+.bar span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+textarea{width:100%;min-height:150px;resize:vertical;background:transparent;color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font:inherit}
+.quote{color:var(--mu);font-size:12px;text-align:center;margin-top:6px}
+</style></head><body>
+<div class="top">
+  <h1>HABIT TRACKER</h1>
+  <div class="nav"><button id="prev">‹</button><span class="mo" id="mo"></span><button id="next">›</button><button id="add">+ Habit</button><button id="exp" title="Download backup">⬇ Backup</button><button id="imp" title="Restore backup">⬆ Restore</button><input type="file" id="file" accept="application/json" hidden><button id="exp">Backup</button><button id="imp">Restore</button><input type="file" id="fi" accept=".json" hidden></div>
+</div>
+<div class="card scroll"><table id="t"></table></div>
+<div class="grid">
+  <div class="card"><h2>Weekly progress</h2><div class="rings" id="rings"></div></div>
+  <div class="card"><h2>Progress by habit</h2><div id="bars"></div></div>
+  <div class="card"><h2>Overall</h2><div class="rings"><div><div class="ring" id="all"><b></b></div><div class="rl" id="allt"></div></div></div><div class="quote" id="q"></div></div>
+  <div class="card"><h2>Notes</h2><textarea id="notes" placeholder="Reminders, wins, lessons this month…"></textarea></div>
+</div>
+<script>
+const COL=["#2f7bff","#37e05a","#ff2e8a","#ffb020","#b6e03a"];
+const WK=["Week 1","Week 2","Week 3","Week 4","Week 5"];
+const DEF=[["Drink 8 glasses of water",31],["30 min workout",20],["Read 10 pages",25],["Sleep 8 hours",25],["Walk 8k steps",28],["Meditate 15 min",20],["Journal",25],["No sugar",15]];
+const QUOTES=["Small steps, every day.","Don't break the chain.","You are what you repeatedly do.","Show up, even badly.","Consistency beats intensity."];
+let now=new Date(),Y=now.getFullYear(),M=now.getMonth();
+let S={habits:DEF.map(h=>({n:h[0],g:h[1]})),log:{},notes:{}};
+try{const r=localStorage.getItem("habit-v1");if(r)S=JSON.parse(r)}catch(e){}
+const save=()=>{try{localStorage.setItem("habit-v1",JSON.stringify(S))}catch(e){}};
+const key=()=>Y+"-"+M;
+const dim=()=>new Date(Y,M+1,0).getDate();
+const get=(h,d)=>!!(S.log[key()]&&S.log[key()][h]&&S.log[key()][h][d]);
+function set(h,d){const k=key();S.log[k]=S.log[k]||{};S.log[k][h]=S.log[k][h]||{};S.log[k][h][d]=!S.log[k][h][d];save();render()}
+const isToday=d=>Y==now.getFullYear()&&M==now.getMonth()&&d==now.getDate();
+function streak(h){let n=dim(),d=n;if(Y==now.getFullYear()&&M==now.getMonth())d=now.getDate();
+ if(!get(h,d)&&d>1&&isToday(d))d--;let s=0;while(d>=1&&get(h,d)){s++;d--}return s}
+function render(){
+ const n=dim(),H=S.habits;
+ document.getElementById("mo").textContent=new Date(Y,M,1).toLocaleString("en",{month:"long",year:"numeric"});
+ let h='<tr><th class="name">Daily habits</th>';
+ for(let w=0;w<5;w++){const a=w*7+1,b=Math.min(a+6,n);if(a>n)break;h+=`<th class="wk" colspan="${b-a+1}" style="background:${COL[w]}33;color:${COL[w]}">${WK[w]}</th>`}
+ h+='<th class="dn">Goal</th><th class="dn">Done</th><th class="dn">Streak</th></tr><tr><th class="name"></th>';
+ for(let d=1;d<=n;d++){const wd=new Date(Y,M,d).toLocaleString("en",{weekday:"narrow"});h+=`<th class="dn">${wd}<br>${d}</th>`}
+ h+="<th></th><th></th><th></th></tr>";
+ H.forEach((x,i)=>{
+  h+=`<tr><td class="name"><input value="${x.n.replace(/"/g,"&quot;")}" data-n="${i}" aria-label="Habit name"></td>`;
+  let c=0;
+  for(let d=1;d<=n;d++){const on=get(i,d);if(on)c++;const col=COL[Math.min(4,Math.floor((d-1)/7))];
+   h+=`<td><button class="cb ${on?"on":""} ${isToday(d)?"today":""}" style="--c:${col}" data-h="${i}" data-d="${d}" aria-label="${x.n} day ${d}"></button></td>`}
+  const s=streak(i);
+  h+=`<td class="goal"><input type="number" min="1" max="31" value="${x.g}" data-g="${i}"></td><td class="cnt">${c}/${x.g}</td><td class="st ${s>=3?"fire":""}">${s>=3?"🔥":""}${s}</td></tr>`});
+ const t=document.getElementById("t");t.innerHTML=h;
+ // stats
+ let tot=0,bars="";
+ H.forEach((x,i)=>{let c=0;for(let d=1;d<=n;d++)if(get(i,d))c++;tot+=c;const p=Math.min(100,Math.round(c/x.g*100));
+  bars+=`<div class="bar"><span>${x.n}</span><i><u style="width:${p}%"></u></i><span>${p}%</span></div>`});
+ document.getElementById("bars").innerHTML=bars;
+ let rg="";
+ for(let w=0;w<5;w++){const a=w*7+1,b=Math.min(a+6,n);if(a>n)break;let c=0;for(let i=0;i<H.length;i++)for(let d=a;d<=b;d++)if(get(i,d))c++;
+  const p=Math.round(c/(H.length*(b-a+1))*100)||0;
+  rg+=`<div><div class="ring" style="background:conic-gradient(${COL[w]} ${p}%,var(--line) 0)"><b>${p}%</b></div><div class="rl">${WK[w]}</div></div>`}
+ document.getElementById("rings").innerHTML=rg;
+ const P=Math.round(tot/(H.length*n)*100)||0;
+ const al=document.getElementById("all");al.style.background=`conic-gradient(var(--w3) ${P}%,var(--line) 0)`;al.firstChild.textContent=P+"%";
+ document.getElementById("allt").textContent=tot+" of "+(H.length*n)+" checks";
+ document.getElementById("q").textContent=QUOTES[(Y+M)%QUOTES.length];
+ const nt=document.getElementById("notes");nt.value=S.notes[key()]||"";
+}
+document.getElementById("t").addEventListener("click",e=>{const b=e.target.closest(".cb");if(b)set(+b.dataset.h,+b.dataset.d)});
+document.getElementById("t").addEventListener("change",e=>{const t=e.target;
+ if(t.dataset.n!==undefined){S.habits[+t.dataset.n].n=t.value||"Habit"}
+ if(t.dataset.g!==undefined){S.habits[+t.dataset.g].g=Math.max(1,+t.value||1)}
+ save();render()});
+document.getElementById("notes").addEventListener("input",e=>{S.notes[key()]=e.target.value;save()});
+document.getElementById("prev").onclick=()=>{M--;if(M<0){M=11;Y--}render()};
+document.getElementById("next").onclick=()=>{M++;if(M>11){M=0;Y++}render()};
+document.getElementById("add").onclick=()=>{S.habits.push({n:"New habit",g:20});save();render()};
+document.getElementById("exp").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:"application/json"}));a.download="habit-backup-"+new Date().toISOString().slice(0,10)+".json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+document.getElementById("imp").onclick=()=>document.getElementById("fi").click();
+document.getElementById("fi").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(d.habits&&d.log){S=d;save();render()}else alert("Not a valid backup file")}catch(x){alert("Could not read that file")}};r.readAsText(f);e.target.value=""};
+document.getElementById("exp").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:"application/json"}));a.download="habit-backup-"+new Date().toISOString().slice(0,10)+".json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+document.getElementById("imp").onclick=()=>document.getElementById("file").click();
+document.getElementById("file").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.habits))throw 0;if(!confirm("Replace current data with this backup?"))return;S={habits:d.habits,log:d.log||{},notes:d.notes||{}};save();render()}catch(x){alert("Not a valid backup file.")}};r.readAsText(f);e.target.value=""};
+if("serviceWorker"in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(()=>{});
+render();
+</script></body></html>
