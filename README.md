@@ -1,4 +1,4 @@
-# Habit Tracker v2 (offline PWA + cloud sync)
+# Habit Tracker v3 (offline PWA + cloud sync)
 
 ## Upload to GitHub (IMPORTANT: keep everything in the repo ROOT, no sub-folders)
 index.html, manifest.json, sw.js, firebase-config.js, icon-192.png, icon-512.png, icon-maskable.png, README.md

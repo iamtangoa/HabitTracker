@@ -14,7 +14,7 @@ html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:12px}
 .top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px}
-h1{font-size:18px;letter-spacing:.2em;margin:0;padding:8px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+h1{display:flex;align-items:center;gap:10px;font-size:18px;letter-spacing:.2em;margin:0;padding:8px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
 .nav{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 button{background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer;font:inherit}
 button:active{transform:scale(.96)}
@@ -70,9 +70,12 @@ dialog{background:var(--card);color:var(--tx);border:1px solid var(--line);borde
 dialog::backdrop{background:#000a}
 dialog h3{margin:0 0 4px}dialog label{display:block;margin:10px 0 0;font-size:12px;color:var(--mu)}
 .mood{font-size:20px;padding:4px 8px}
+.cb.on.part{background:linear-gradient(to top,var(--c) var(--pp),transparent var(--pp))}.cb.on.part::before{content:""}
+#li{display:grid;gap:6px;margin:10px 0}.li{text-align:left;padding:10px 12px}.li::before{content:"○ ";color:var(--mu)}.li.act::before{content:"● ";color:var(--good)}
+.scr{font-weight:700;margin-top:8px}
 </style></head><body>
 <div class="top">
-  <h1>HABIT TRACKER</h1>
+  <h1><img src="icon-192.png" alt="" width="22" height="22" style="border-radius:5px" onerror="this.remove()">HABIT TRACKER</h1>
   <div class="nav"><button id="prev">‹</button><span class="mo" id="mo"></span><button id="next">›</button><button id="add">+ Habit</button><button id="sync">☁ Sync</button><button id="exp" title="Download backup file">⬇</button><button id="imp" title="Restore from backup file">⬆</button><input type="file" id="file" accept="application/json" hidden></div>
 </div>
 <div class="card" id="today" hidden><h2>Today</h2><div id="tlist"></div></div>
@@ -115,10 +118,17 @@ const isD=(h,d)=>{const c=getCell(h,d);return !!(c&&c.s==="d")};
 function setCell(h,d,v){const k=mk();if(!v||(!v.s&&!v.n&&!v.t)){if(S.log[k]&&S.log[k][h])delete S.log[k][h][d];return}
  S.log[k]=S.log[k]||{};S.log[k][h]=S.log[k][h]||{};S.log[k][h][d]=v}
 function tap(h,d){const c=getCell(h,d);if(c&&c.s)setCell(h,d,c.n?{n:c.n}:null);else setCell(h,d,Object.assign({},c,{s:"d"}))}
-function stats(h,n){let raw=0,cap=0,goal=0;const wks=[];
- if(h.per==="w"){for(let w=0;w*7<n;w++){const a=w*7+1,b=Math.min(a+6,n),len=b-a+1,t=len===7?h.t:Math.min(h.t,Math.ceil(h.t*len/7));let c=0;for(let d=a;d<=b;d++)if(isD(h.id,d))c++;raw+=c;cap+=Math.min(c,t);goal+=t;wks.push({c,t})}}
- else{for(let d=1;d<=n;d++)if(isD(h.id,d))raw++;goal=Math.min(h.t,n);cap=Math.min(raw,goal)}
- return{raw,cap,goal,pct:goal?Math.round(cap/goal*100):0,wks}}
+const val=(h,d)=>{const c=getCell(h,d);return c&&c.s==="d"?(c.p==null?1:c.p):0};
+const fmt=v=>String(Math.round(v*10)/10);
+function cellLabel(h,c){if(!c||c.s!=="d"||c.p==null)return"";const pc=Math.round(c.p*100)+"%";
+ if(h.kind==="l")return(c.k?c.k.length:0)+"/"+(c.tot||(h.items||[]).length)+" · "+pc;
+ if(h.kind==="a")return c.a+"/"+h.amt+" "+(h.unit||"")+" · "+pc;return pc}
+function quick(hid,d){const x=S.habits.find(q=>q.id===hid);if(!x)return;if((x.kind||"c")==="c"){tap(hid,d);save()}else openCell(hid,d)}
+function stats(h,n){let raw=0,cap=0,goal=0,days=0;const wks=[],r2=v=>Math.round(v*100)/100;
+ for(let d=1;d<=n;d++)if(isD(h.id,d))days++;
+ if(h.per==="w"){for(let w=0;w*7<n;w++){const a=w*7+1,b=Math.min(a+6,n),len=b-a+1,t=len===7?h.t:Math.min(h.t,Math.ceil(h.t*len/7));let c=0;for(let d=a;d<=b;d++)c+=val(h.id,d);c=r2(c);raw+=c;cap+=Math.min(c,t);goal+=t;wks.push({c,t})}}
+ else{for(let d=1;d<=n;d++)raw+=val(h.id,d);raw=r2(raw);goal=Math.min(h.t,n);cap=Math.min(raw,goal)}
+ return{raw:r2(raw),cap:r2(cap),goal,days,pct:goal?Math.round(cap/goal*100):0,wks}}
 function streak(h,n){if(h.per==="m")return"";const td=isCur()?now.getDate():n;
  if(h.t===7){let d=td;if(isCur()&&!isD(h.id,d))d--;let s=0;while(d>=1&&isD(h.id,d)){s++;d--}return s+"d"}
  const st=stats(h,n).wks;let w=Math.floor((td-1)/7),s=0;if(isCur()&&st[w].c<st[w].t)w--;
@@ -134,11 +144,11 @@ function render(){
  h+="<th></th><th></th><th></th></tr>";
  if(!H.length)h+=`<tr><td class="name dn" colspan="${n+4}">No habits this month — tap “+ Habit”.</td></tr>`;
  H.forEach(x=>{const s=stats(x,n),st=streak(x,n),num=parseInt(st),fire=st.endsWith("d")?num>=3:st.endsWith("w")?num>=2:false;
-  const tl=x.per==="m"?x.t+"×/mo":x.t===7?"Daily":x.t+"×/wk";
+  const tl=(x.per==="m"?x.t+"×/mo":x.t===7?"Daily":x.t+"×/wk")+(x.kind==="l"?" ☰":x.kind==="a"?" ◔":"");
   h+=`<tr><td class="name"><button class="hn" data-edit="${x.id}">${esc(x.n)}</button></td>`;
-  for(let d=1;d<=n;d++){const c=getCell(x.id,d)||{};
-   h+=`<td><button class="cb ${c.s==="d"?"on":c.s==="x"?"x":""} ${c.n||c.t?"has":""} ${d===T?"today":""}" style="--c:${COL[Math.min(4,Math.floor((d-1)/7))]}" data-h="${x.id}" data-d="${d}" aria-label="${esc(x.n)} day ${d}"></button></td>`}
-  h+=`<td><button class="tgb" data-edit="${x.id}">${tl}</button></td><td class="cnt">${s.raw}/${s.goal}</td><td class="st ${fire?"fire":""}">${fire?"🔥":""}${st||"—"}</td></tr>`});
+  for(let d=1;d<=n;d++){const c=getCell(x.id,d)||{},pt=c.s==="d"&&c.p!=null&&c.p<1;
+   h+=`<td><button class="cb ${c.s==="d"?"on":c.s==="x"?"x":""} ${pt?"part":""} ${c.n||c.t?"has":""} ${d===T?"today":""}" style="--c:${COL[Math.min(4,Math.floor((d-1)/7))]};--pp:${pt?Math.round(c.p*100):0}%" title="${esc(cellLabel(x,c))}" data-h="${x.id}" data-d="${d}" aria-label="${esc(x.n)} day ${d}"></button></td>`}
+  h+=`<td><button class="tgb" data-edit="${x.id}">${tl}</button></td><td class="cnt">${fmt(s.raw)}/${s.goal}</td><td class="st ${fire?"fire":""}">${fire?"🔥":""}${st||"—"}</td></tr>`});
  h+='<tr><td class="name dn">Day journal</td>';
  for(let d=1;d<=n;d++){const dn=(S.dn[mk()]||{})[d];h+=`<td><button class="dm" data-day="${d}">${dn?(dn.m?MOODS[dn.m-1]:"📝"):"·"}</button></td>`}
  h+="<td></td><td></td><td></td></tr>";
@@ -153,8 +163,8 @@ function render(){
    o+=`<div class="tr ${warn?"warn":""}"><button class="tq ${done?"on":""}" data-tq="${x.id}" aria-label="Toggle ${esc(x.n)} today"></button><div><b>${esc(x.n)}</b><div class="mu">${hint}</div></div></div>`});
   $("tlist").innerHTML=o}
  // bars/rings
- let bars="",cap=0,goal=0;
- H.forEach(x=>{const s=stats(x,n);cap+=s.cap;goal+=s.goal;bars+=`<div class="bar"><span>${esc(x.n)}</span><i><u style="width:${s.pct}%"></u></i><span>${s.pct}%</span></div>`});
+ let bars="",cap=0,goal=0,pts=0,days=0;
+ H.forEach(x=>{const s=stats(x,n);cap+=s.cap;goal+=s.goal;pts+=s.raw;days+=s.days;bars+=`<div class="bar"><span>${esc(x.n)}</span><i><u style="width:${s.pct}%"></u></i><span>${s.pct}%</span></div>`});
  $("bars").innerHTML=bars||'<div class="mu">—</div>';
  let rg="";const WH=H.filter(x=>x.per==="w");
  for(let w=0;w*7<n;w++){let c=0,t=0;WH.forEach(x=>{const q=stats(x,n).wks[w];c+=Math.min(q.c,q.t);t+=q.t});rg+=ring(t?Math.round(c/t*100):0,COL[w],WK[w])}
@@ -162,7 +172,7 @@ function render(){
  if(MH.length){let c=0,t=0;MH.forEach(x=>{const s=stats(x,n);c+=s.cap;t+=s.goal});rg+=ring(Math.round(c/t*100),"#c77dff","Monthly")}
  $("rings").innerHTML=rg;
  const P=goal?Math.round(cap/goal*100):0;$("all").style.background=`conic-gradient(var(--w3) ${P}%,var(--line) 0)`;$("all").firstChild.textContent=P+"%";
- $("allt").textContent=cap+" of "+goal+" goal checks";$("q").textContent=QUOTES[(Y+M)%QUOTES.length];
+ $("allt").textContent=fmt(cap)+" of "+goal+" goal days"+(days&&pts/days<0.995?" · quality "+Math.round(pts/days*100)+"%":"");$("q").textContent=QUOTES[(Y+M)%QUOTES.length];
  // journal
  const k=mk(),items=[],reasons={};
  S.habits.forEach(x=>{const m=(S.log[k]||{})[x.id]||{};for(const d in m){const c=m[d];if(!(c.n||c.t||c.s==="x"))continue;
@@ -173,7 +183,7 @@ function render(){
  const rs=Object.entries(reasons).sort((a,b)=>b[1]-a[1]);
  $("why").textContent=rs.length?"Top reasons for missing: "+rs.map(r=>r[0]+" ×"+r[1]).join(" · "):"";
  $("jl").innerHTML=items.map(i=>i.day?`<div class="je" data-day="${i.d}"><span class="jd">${MON()} ${i.d}</span>${i.day.m?MOODS[i.day.m-1]:"📝"} <b>Day</b><div>${esc(i.day.n)}</div></div>`
-  :`<div class="je" data-jh="${i.x.id}" data-jd="${i.d}"><span class="jd">${MON()} ${i.d}</span><span class="${i.c.s==="x"?"bad":"good"}">${i.c.s==="x"?"×":i.c.s==="d"?"✓":"•"}</span> <b>${esc(i.x.n)}</b> ${i.c.t?`<em class="tag">${esc(i.c.t)}</em>`:""}<div>${esc(i.c.n||"")}</div></div>`).join("")||'<div class="mu">No notes yet. Hold a box to add one.</div>';
+  :`<div class="je" data-jh="${i.x.id}" data-jd="${i.d}"><span class="jd">${MON()} ${i.d}</span><span class="${i.c.s==="x"?"bad":"good"}">${i.c.s==="x"?"×":i.c.s==="d"?"✓":"•"}</span> <b>${esc(i.x.n)}</b> <span class="mu">${esc(cellLabel(i.x,i.c))}</span> ${i.c.t?`<em class="tag">${esc(i.c.t)}</em>`:""}<div>${esc(i.c.n||"")}</div></div>`).join("")||'<div class="mu">No notes yet. Hold a box to add one.</div>';
  // notes & archive
  const nt=$("notes");if(document.activeElement!==nt)nt.value=S.mn[k]||"";
  const AR=S.habits.filter(x=>x.arch!=null&&mi()>=x.arch);$("arch").hidden=!AR.length;
@@ -188,32 +198,55 @@ function openHabit(id){if(dlg.open)return;const x=id?S.habits.find(q=>q.id===id)
  <label>Name<input id="hn" value="${esc(x.n)}" maxlength="60"></label>
  <label>How often?<select id="hm"><option value="d">Every day</option><option value="w">Some days each week</option><option value="m">Some days each month</option></select></label>
  <label id="htl">Target days<input id="ht" type="number" min="1" max="31" value="${x.t}"></label>
+ <label>How do you log it?<select id="hk"><option value="c">Simple tick</option><option value="l">Checklist of sub-habits (scored)</option><option value="a">Amount, e.g. 30 min (partial credit)</option></select></label>
+ <label id="hll">Sub-habits, one per line<textarea id="hit" placeholder="Silence&#10;Breath&#10;Noticing beliefs">${esc((x.items||[]).join("\n"))}</textarea></label>
+ <div id="hal" class="row"><label style="flex:1;margin:0">Target amount<input id="hamt" type="number" min="1" step="any" value="${x.amt||30}"></label><label style="flex:1;margin:0">Unit<input id="hunit" value="${esc(x.unit||"min")}" maxlength="12"></label></div>
  <div class="row"><button class="pri" id="hs">Save</button>${id?'<button id="ha">Archive</button><button class="dng" id="hd">Delete</button>':""}<button data-close>Cancel</button></div>
  ${id?'<div class="mu">Archive hides it from this month onward and keeps past months. Delete erases it and all its history.</div>':""}`;
- $("hm").value=mode;
- const sync=()=>{const m=$("hm").value;$("htl").style.display=m==="d"?"none":"block";$("ht").max=m==="w"?7:31;$("htl").firstChild.textContent=m==="w"?"Days per week (1–7)":"Days per month (1–31)"};
- $("hm").onchange=sync;sync();
- $("hs").onclick=()=>{const nm=$("hn").value.trim();if(!nm){$("hn").focus();return}const m=$("hm").value;
-  let per=m==="m"?"m":"w",t=m==="d"?7:Math.max(1,Math.min(m==="w"?7:31,parseInt($("ht").value)||1));
-  if(id){Object.assign(x,{n:nm,per,t})}else S.habits.push({id:rid(),n:nm,per,t,from:mi(),arch:null});
+ $("hm").value=mode;$("hk").value=x.kind||"c";
+ const sync=()=>{const m=$("hm").value,k=$("hk").value;$("htl").style.display=m==="d"?"none":"block";$("ht").max=m==="w"?7:31;$("htl").firstChild.textContent=m==="w"?"Days per week (1–7)":"Days per month (1–31)";$("hll").style.display=k==="l"?"block":"none";$("hal").style.display=k==="a"?"flex":"none"};
+ $("hm").onchange=sync;$("hk").onchange=sync;sync();
+ $("hs").onclick=()=>{const nm=$("hn").value.trim();if(!nm){$("hn").focus();return}const m=$("hm").value,k=$("hk").value;
+  const per=m==="m"?"m":"w",t=m==="d"?7:Math.max(1,Math.min(m==="w"?7:31,parseInt($("ht").value)||1));
+  const items=$("hit").value.split("\n").map(q=>q.trim()).filter(Boolean).slice(0,20),amt=parseFloat($("hamt").value)||0,unit=$("hunit").value.trim()||"min";
+  let kind=k;if(k==="l"&&!items.length)kind="c";if(k==="a"&&amt<=0)kind="c";
+  const f={n:nm,per,t,kind,items:kind==="l"?items:[],amt:kind==="a"?amt:0,unit:kind==="a"?unit:""};
+  if(id)Object.assign(x,f);else S.habits.push(Object.assign({id:rid(),from:mi(),arch:null},f));
   dlg.close();save()};
  if(id){$("ha").onclick=()=>{x.arch=mi();dlg.close();save()};$("hd").onclick=()=>delHabit(id)}
  dlg.showModal()}
 function delHabit(id){const x=S.habits.find(q=>q.id===id);if(!x||!confirm('Delete "'+x.n+'" and all its history? This cannot be undone.'))return;
  S.habits=S.habits.filter(q=>q.id!==id);for(const k in S.log)delete S.log[k][id];if(dlg.open)dlg.close();save()}
 function openCell(hid,d){const x=S.habits.find(q=>q.id===hid);if(!x||dlg.open)return;
- const c=getCell(hid,d)||{};let st=c.s||"",tag=c.t||"";
+ const c=getCell(hid,d)||{},kind=x.kind||"c",items=x.items||[];let st=c.s||"",tag=c.t||"",amt=c.a||0;
+ const ck=new Set((c.k||[]).filter(i=>items.includes(i)));
  const CH={d:["Felt great","Easy","Good routine","Did it early","Pushed through"],x:["Tired","Busy","Sick","Forgot","Travel","Low motivation","Weather"]};
- dlg.innerHTML=`<h3>${esc(x.n)}</h3><div class="mu">${MON()} ${d}, ${Y}</div>
- <div class="row"><button id="sd">✓ Done</button><button id="sx">× Missed</button><button id="sc">No status</button></div>
+ const body=kind==="l"?`<div id="li">${items.map((it,i)=>`<button class="li" data-i="${i}">${esc(it)}</button>`).join("")}</div>`
+  :kind==="a"?`<label>Amount done (${esc(x.unit)})<input id="am" type="number" min="0" step="any" value="${amt||""}"></label><div class="row">${[.25,.5,.75,1].map(f=>`<button data-f="${f}">${Math.round(x.amt*f*10)/10}</button>`).join("")}</div>`:"";
+ dlg.innerHTML=`<h3>${esc(x.n)}</h3><div class="mu">${MON()} ${d}, ${Y}</div><div class="scr" id="scr"></div>${body}
+ <div class="row">${kind==="c"?'<button id="sd">✓ Done</button>':kind==="l"?'<button id="sa">Check all</button>':""}<button id="sx">× Missed</button><button id="sc">No status</button></div>
  <div class="row" id="chips"></div>
  <textarea id="cn" placeholder="Why was it done / missed? What did you learn today?">${esc(c.n||"")}</textarea>
  <div class="row"><button class="pri" id="cs">Save</button><button data-close>Cancel</button></div>`;
- const paint=()=>{$("sd").classList.toggle("act",st==="d");$("sx").classList.toggle("act",st==="x");$("sc").classList.toggle("act",!st);
+ const score=()=>kind==="l"?(items.length?ck.size/items.length:0):kind==="a"?(x.amt?Math.min(1,amt/x.amt):0):(st==="d"?1:0);
+ const paint=()=>{if(kind!=="c"){const q=score();if(q>0)st="d";else if(st==="d")st=""}
+  if($("sd"))$("sd").classList.toggle("act",st==="d");$("sx").classList.toggle("act",st==="x");$("sc").classList.toggle("act",!st);
+  if(kind==="l"){document.querySelectorAll(".li").forEach(b=>b.classList.toggle("act",ck.has(items[+b.dataset.i])));$("scr").textContent=ck.size+"/"+items.length+" · "+Math.round(score()*100)+"%"}
+  if(kind==="a")$("scr").textContent=(amt||0)+"/"+x.amt+" "+x.unit+" · "+Math.round(score()*100)+"%";
   $("chips").innerHTML=(CH[st]||[]).map(t=>`<button class="chip ${t===tag?"act":""}" data-chip="${esc(t)}">${esc(t)}</button>`).join("")};
- $("sd").onclick=()=>{st="d";tag="";paint()};$("sx").onclick=()=>{st="x";tag="";paint()};$("sc").onclick=()=>{st="";tag="";paint()};
+ const unx=()=>{if(st==="x"){st="";tag=""}};
+ if($("sd"))$("sd").onclick=()=>{st="d";tag="";paint()};
+ if($("sa"))$("sa").onclick=()=>{unx();items.forEach(i=>ck.add(i));paint()};
+ if($("li"))$("li").onclick=e=>{const b=e.target.closest("[data-i]");if(!b)return;unx();const it=items[+b.dataset.i];ck.has(it)?ck.delete(it):ck.add(it);paint()};
+ if($("am")){$("am").oninput=()=>{amt=parseFloat($("am").value)||0;if(amt>0)unx();paint()};
+  dlg.querySelectorAll("[data-f]").forEach(b=>b.onclick=()=>{amt=Math.round(x.amt*parseFloat(b.dataset.f)*10)/10;$("am").value=amt;unx();paint()})}
+ const wipe=()=>{ck.clear();amt=0;if($("am"))$("am").value=""};
+ $("sx").onclick=()=>{wipe();st="x";tag="";paint()};$("sc").onclick=()=>{wipe();st="";tag="";paint()};
  $("chips").onclick=e=>{const b=e.target.closest("[data-chip]");if(b){tag=tag===b.dataset.chip?"":b.dataset.chip;paint()}};
- $("cs").onclick=()=>{const nn=$("cn").value.trim();setCell(hid,d,{s:st||undefined,n:nn||undefined,t:tag||undefined});dlg.close();save()};
+ $("cs").onclick=()=>{const nn=$("cn").value.trim(),q=Math.round(score()*100)/100;const v={s:st||undefined,n:nn||undefined,t:tag||undefined};
+  if(st==="d"&&kind==="l"){v.k=[...ck];v.tot=items.length;v.p=q}
+  if(st==="d"&&kind==="a"){v.a=amt;v.p=q}
+  setCell(hid,d,v);dlg.close();save()};
  paint();dlg.showModal()}
 function openDay(d){if(dlg.open)return;const q=(S.dn[mk()]||{})[d]||{};let m=q.m||0;
  dlg.innerHTML=`<h3>Day journal</h3><div class="mu">${MON()} ${d}, ${Y}</div>
@@ -229,12 +262,12 @@ const TB=$("t");let lp=null,lpFired=false;
 TB.addEventListener("pointerdown",e=>{const b=e.target.closest(".cb");if(!b)return;lpFired=false;clearTimeout(lp);lp=setTimeout(()=>{lpFired=true;openCell(b.dataset.h,+b.dataset.d)},500)});
 ["pointerup","pointercancel","pointerleave"].forEach(ev=>TB.addEventListener(ev,()=>clearTimeout(lp)));
 TB.addEventListener("contextmenu",e=>{const b=e.target.closest(".cb");if(!b)return;e.preventDefault();clearTimeout(lp);lpFired=true;openCell(b.dataset.h,+b.dataset.d)});
-TB.addEventListener("click",e=>{const b=e.target.closest(".cb");if(!b)return;if(lpFired){lpFired=false;return}tap(b.dataset.h,+b.dataset.d);save()});
+TB.addEventListener("click",e=>{const b=e.target.closest(".cb");if(!b)return;if(lpFired){lpFired=false;return}quick(b.dataset.h,+b.dataset.d)});
 document.addEventListener("click",e=>{const t=e.target;let b;
  if(t.closest("[data-close]")){dlg.close();return}
  if(b=t.closest("[data-edit]")){openHabit(b.dataset.edit);return}
  if(b=t.closest("[data-day]")){openDay(+b.dataset.day);return}
- if(b=t.closest("[data-tq]")){tap(b.dataset.tq,now.getDate());save();return}
+ if(b=t.closest("[data-tq]")){quick(b.dataset.tq,now.getDate());return}
  if(b=t.closest("[data-jf]")){jf=b.dataset.jf;render();return}
  if(b=t.closest("[data-jh]")){openCell(b.dataset.jh,+b.dataset.jd);return}
  if(b=t.closest("[data-rs]")){const x=S.habits.find(q=>q.id===b.dataset.rs);if(x){x.arch=null;save()}return}
