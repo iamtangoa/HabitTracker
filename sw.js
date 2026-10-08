@@ -1,6 +1,7 @@
-const V="habit-tracker-v1";
-const FILES=["./","./index.html","./manifest.json","./icons/icon-192.png","./icons/icon-512.png","./icons/maskable-512.png"];
-self.addEventListener("install",e=>{e.waitUntil(caches.open(V).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting()))});
+const V="habit-tracker-v2";
+const FILES=["./","./index.html","./manifest.json","./firebase-config.js","./icon-192.png","./icon-512.png","./icon-maskable.png"];
+self.addEventListener("install",e=>{e.waitUntil(caches.open(V).then(c=>Promise.all(FILES.map(f=>c.add(f).catch(()=>{})))).then(()=>self.skipWaiting()))});
 self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==V).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
-self.addEventListener("fetch",e=>{if(e.request.method!=="GET")return;
-e.respondWith(fetch(e.request).then(r=>{const c=r.clone();caches.open(V).then(h=>h.put(e.request,c));return r}).catch(()=>caches.match(e.request).then(r=>r||caches.match("./index.html"))))});
+self.addEventListener("fetch",e=>{const r=e.request,u=new URL(r.url);
+ if(r.method!=="GET"||!(u.origin===location.origin||u.hostname==="www.gstatic.com"))return;
+ e.respondWith(fetch(r).then(x=>{if(x&&(x.ok||x.type==="opaque")){const c=x.clone();caches.open(V).then(h=>h.put(r,c))}return x}).catch(()=>caches.match(r).then(x=>x||caches.match("./index.html"))))});
