@@ -70,13 +70,17 @@ dialog{background:var(--card);color:var(--tx);border:1px solid var(--line);borde
 dialog::backdrop{background:#000a}
 dialog h3{margin:0 0 4px}dialog label{display:block;margin:10px 0 0;font-size:12px;color:var(--mu)}
 .mood{font-size:20px;padding:4px 8px}
+input[type=checkbox]{width:auto;margin-right:6px}label.ck{display:flex;align-items:center;color:var(--tx);font-size:13px}
+.li{width:100%}.dr{display:grid;grid-template-columns:1fr 90px auto;gap:8px;align-items:center}
+.bdx{display:none;gap:6px;margin-top:4px}.bdx input:first-child{width:70px;flex:none}.li.act{border-color:var(--good)}
+.cb.x.auto{opacity:.4}.dd.fri{color:var(--bad)}
 .cb.on.part{background:linear-gradient(to top,var(--c) var(--pp),transparent var(--pp))}.cb.on.part::before{content:""}
 #li{display:grid;gap:6px;margin:10px 0}.li{text-align:left;padding:10px 12px}.li::before{content:"○ ";color:var(--mu)}.li.act::before{content:"● ";color:var(--good)}
 .scr{font-weight:700;margin-top:8px}
 </style></head><body>
 <div class="top">
   <h1><img src="icon-192.png" alt="" width="22" height="22" style="border-radius:5px" onerror="this.remove()">HABIT TRACKER</h1>
-  <div class="nav"><button id="prev">‹</button><span class="mo" id="mo"></span><button id="next">›</button><button id="add">+ Habit</button><button id="sync">☁ Sync</button><button id="exp" title="Download backup file">⬇</button><button id="imp" title="Restore from backup file">⬆</button><input type="file" id="file" accept="application/json" hidden></div>
+  <div class="nav"><button id="prev">‹</button><span class="mo" id="mo"></span><button id="next">›</button><button id="add">+ Habit</button><button id="calb" title="Switch calendar">📅</button><button id="sync">☁ Sync</button><button id="exp" title="Download backup file">⬇</button><button id="imp" title="Restore from backup file">⬆</button><input type="file" id="file" accept="application/json" hidden></div>
 </div>
 <div class="card" id="today" hidden><h2>Today</h2><div id="tlist"></div></div>
 <div class="card scroll"><table id="t"></table></div>
@@ -97,72 +101,116 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const COL=["#2f7bff","#37e05a","#ff2e8a","#ffb020","#b6e03a"],WK=["Week 1","Week 2","Week 3","Week 4","Week 5"],MOODS=["😞","😕","🙂","😄","🤩"];
 const QUOTES=["Small steps, every day.","Don't break the chain.","You are what you repeatedly do.","Show up, even badly.","Consistency beats intensity."];
-const DEF=[["Drink 8 glasses of water","w",7],["30 min workout","w",4],["Read 10 pages","w",5],["Sleep 8 hours","w",7],["Walk 8k steps","w",5],["Meditate 15 min","w",3],["Journal","w",5],["No sugar","m",15]];
-const rid=()=>Math.random().toString(36).slice(2,9);
-const fresh=()=>({v:2,habits:DEF.map((x,i)=>({id:"d"+i,n:x[0],per:x[1],t:x[2],from:0,arch:null})),log:{},dn:{},mn:{},updated:0,synced:0});
-function norm(s){s=s||{};s.v=2;s.habits=s.habits||[];s.log=s.log||{};s.dn=s.dn||{};s.mn=s.mn||{};s.updated=s.updated||0;s.synced=s.synced||0;return s}
-function migrate(o){const n=fresh();n.habits=(o.habits||[]).map((x,i)=>({id:"h"+i,n:x.n,per:"m",t:x.g||20,from:0,arch:null}));n.log={};
- for(const k in o.log||{}){n.log[k]={};for(const i in o.log[k]){const m={};for(const d in o.log[k][i])if(o.log[k][i][d])m[d]={s:"d"};n.log[k]["h"+i]=m}}n.mn=o.notes||{};return n}
+const JM=["Farvardin","Ordibehesht","Khordad","Tir","Mordad","Shahrivar","Mehr","Aban","Azar","Dey","Bahman","Esfand"];
+const WDJ=["ی","د","س","چ","پ","ج","ش"],WDG=["S","M","T","W","T","F","S"];
+const rid=()=>Math.random().toString(36).slice(2,9),pad=n=>String(n).padStart(2,"0");
+const isoOf=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const fmt=v=>String(Math.round(v*10)/10),sc10=p=>fmt(p*10)+"/10";
+/* sub-habit syntax: plain=counts | Name: 4000 IU = dose | *Name = required for tick | ~Name = extra (no tick) | -Name = harm (subtracts) */
+function parseItems(txt){return txt.split("\n").map(l=>l.trim()).filter(Boolean).slice(0,30).map(l=>{const f=l[0],r=l.slice(1).trim();
+ if(f==="*")return{n:r,t:"g"};if(f==="~")return{n:r,t:"x"};if(f==="-")return{n:r,t:"b"};
+ const m=l.match(/^(.+?)\s*[:=]\s*([\d.]+)\s*(\S*)$/);if(m)return{n:m[1].trim(),t:"d",rec:parseFloat(m[2]),unit:m[3]||""};return{n:l,t:"c"}}).filter(i=>i.n)}
+const itemLine=i=>i.t==="g"?"*"+i.n:i.t==="x"?"~"+i.n:i.t==="b"?"-"+i.n:i.t==="d"?i.n+": "+i.rec+(i.unit?" "+i.unit:""):i.n;
+const PRE=[
+["Workout","w",4,"s",0,"Gym\nRunning\nSwimming\nHomeGym"],
+["Mental Maintenance","w",7,"s",0,"Meditate 20 min\nGrateful + Imagination 12 min\nBeliefs Maintenance\nLucky\nWorthy action\nSixth Sense"],
+["Boat in the Sea","w",4,"s",1,"*20+ miles from shore\n~Fixed something on the beach\n~Bought tools / supplies\n~Technical work"],
+["Sleep Ritual","w",7,"a",0,"5 min morning sun (sleep reset)\nNo workout after dark (if possible)\nShower after dark\nNo food 3.5 h before bed\nNo drinks 3 h before bed\nNo screens 1 h before bed\nNight glasses after shower\nMagnesium glycinate"],
+["Nutrients","w",7,"a",0,"Vitamin D3: 4000 IU\nZinc\nB1\nK2\nProtein\nHealthy fat\n-Junk / harmful intake"],
+["Skincare","w",7,"a",0,"Brushed teeth\nFace wash\nMoisturizer\nSunscreen\n-Blemish / acne / dark circles"],
+["Learn + Practice + Action","w",5,"a",0,"Trade: learn\nTrade: practice (simulated)\nTrade: real action"],
+["Read Books","w",5,"s",0,"5 min at least\n25 minutes"]];
+const mkPre=()=>PRE.map((p,i)=>({id:"p"+i,n:p[0],per:p[1],t:p[2],sm:p[3],ax:!!p[4],items:parseItems(p[5]),from:"",arch:null}));
+const fresh=()=>({v:3,cal:"j",habits:mkPre(),log:{},dn:{},mn:{},updated:0,synced:0});
+function migrate(o){const n={v:2,habits:(o.habits||[]).map((x,i)=>({id:"h"+i,n:x.n,per:"m",t:x.g||20,kind:"c",from:0,arch:null})),log:{},dn:{},mn:o.notes||{}};
+ for(const k in o.log||{}){n.log[k]={};for(const i in o.log[k]){const m={};for(const d in o.log[k][i])if(o.log[k][i][d])m[d]={s:"d"};n.log[k]["h"+i]=m}}return n}
+function up(s){s=s||{};if(!s.v||s.v<2)s=migrate(s);
+ if(s.v<3){const g=(Y,M,d)=>Y+"-"+pad(M+1)+"-"+pad(d),lg={},dn={},mn={},old=s.habits||[];
+  for(const k in s.log||{}){const[Y,M]=k.split("-").map(Number);for(const h in s.log[k])for(const d in s.log[k][h])(lg[h]=lg[h]||{})[g(Y,M,+d)]=s.log[k][h][d]}
+  for(const k in s.dn||{}){const[Y,M]=k.split("-").map(Number);for(const d in s.dn[k])dn[g(Y,M,+d)]=s.dn[k][d]}
+  for(const k in s.mn||{})mn["g:"+k]=s.mn[k];
+  const cv=v=>typeof v==="number"?(v?g(Math.floor(v/12),v%12,1):""):(v||"");
+  const dflt=old.length>0&&old.every(h=>/^d\d$/.test(h.id));
+  const hs=old.map(h=>{const o={id:h.id,n:h.n,per:h.per,t:h.t,sm:"a",ax:false,items:[],from:cv(h.from),arch:h.arch==null?null:cv(h.arch)};
+   if(h.kind==="l")o.items=(h.items||[]).map(n=>({n,t:"c"}));
+   if(h.kind==="a"){o.items=[{n:h.n,t:"d",rec:h.amt||1,unit:h.unit||""}];for(const d in lg[h.id]||{}){const c=lg[h.id][d];if(typeof c.a==="number")c.a={[h.n]:c.a}}}
+   return o});
+  if(dflt){hs.forEach(h=>h.arch="2000-01-01");hs.push(...mkPre())}
+  s={v:3,cal:"j",habits:hs,log:lg,dn,mn,updated:s.updated||0,synced:s.synced||0}}
+ s.cal=s.cal||"j";s.habits=s.habits||[];s.log=s.log||{};s.dn=s.dn||{};s.mn=s.mn||{};s.updated=s.updated||0;s.synced=s.synced||0;return s}
+const norm=up;
 let S,migrated=false;
-try{const r=localStorage.getItem("habit-v2");if(r)S=norm(JSON.parse(r));else{const o=localStorage.getItem("habit-v1");if(o){S=norm(migrate(JSON.parse(o)));migrated=true}else S=fresh()}}catch(e){S=fresh()}
-const persist=()=>{try{localStorage.setItem("habit-v2",JSON.stringify(S))}catch(e){}};
+try{let r=localStorage.getItem("habit-v3");if(r)S=up(JSON.parse(r));else{r=localStorage.getItem("habit-v2")||localStorage.getItem("habit-v1");if(r){S=up(JSON.parse(r));migrated=true}else S=fresh()}}catch(e){S=fresh()}
+const persist=()=>{try{localStorage.setItem("habit-v3",JSON.stringify(S))}catch(e){}};
 const touch=()=>{S.updated=Date.now();persist();sched()};
 const save=()=>{touch();render()};
 if(migrated)persist();
-let now=new Date(),Y=now.getFullYear(),M=now.getMonth(),jf="all";
-const mk=()=>Y+"-"+M,mi=()=>Y*12+M,dim=()=>new Date(Y,M+1,0).getDate(),isCur=()=>Y==now.getFullYear()&&M==now.getMonth();
-const MON=()=>new Date(Y,M,1).toLocaleString("en",{month:"short"});
-const act=()=>S.habits.filter(h=>mi()>=h.from&&(h.arch==null||mi()<h.arch));
-const getCell=(h,d)=>((S.log[mk()]||{})[h]||{})[d];
+/* ---------- calendar (Jalali default, Gregorian optional) ---------- */
+const JF=new Intl.DateTimeFormat("en-u-ca-persian-nu-latn",{year:"numeric",month:"numeric",day:"numeric"});
+function jp(dt){const o={};JF.formatToParts(dt).forEach(p=>{o[p.type]=p.value});return{y:+(o.year||o.relatedYear),m:+o.month,d:+o.day}}
+const noon=(y,m,d)=>new Date(y,m,d,12);
+function curYM(dt){if(S.cal==="g")return[dt.getFullYear(),dt.getMonth()];const p=jp(dt);return[p.y,p.m-1]}
+function build(y,m){let st,n;
+ if(S.cal==="g"){st=noon(y,m,1);n=new Date(y,m+1,0).getDate()}
+ else{st=noon(y+621,2,21);st.setDate(st.getDate()+Math.round(m*30.44));
+  for(let i=0;i<20;i++){const p=jp(st),dm=(y*12+m)-(p.y*12+p.m-1);if(!dm&&p.d===1)break;st.setDate(st.getDate()+(dm>0?32-p.d:dm<0?-p.d:1-p.d))}
+  n=0;const g=new Date(st);while(jp(g).m-1===m&&n<32){n++;g.setDate(g.getDate()+1)}}
+ const iso=[null],dow=[null];for(let d=1;d<=n;d++){const x=new Date(st);x.setDate(st.getDate()+d-1);iso.push(isoOf(x));dow.push(x.getDay())}
+ return{y,m,n,iso,dow,mname:S.cal==="g"?new Date(y,m,1).toLocaleString("en",{month:"long"}):JM[m]}}
+let V,vy,vm,CALV=S.cal;
+function setView(y,m){vy=y;vm=m;V=build(y,m)}
+function reView(){CALV=S.cal;const q=curYM(new Date());setView(q[0],q[1])}
+reView();
+const todayD=()=>Math.max(0,V.iso.indexOf(isoOf(new Date())));
+const isCur=()=>todayD()>0;
+const nk=()=>S.cal+":"+vy+"-"+vm;
+const act=()=>S.habits.filter(h=>(h.from||"")<=V.iso[V.n]&&(h.arch==null||V.iso[1]<h.arch));
+const getCell=(h,d)=>(S.log[h]||{})[V.iso[d]];
+function setCell(h,d,v){const k=V.iso[d];if(!v||(!v.s&&!v.n&&!v.t&&!(v.k&&v.k.length)&&!v.a&&!v.bd)){if(S.log[h])delete S.log[h][k];return}(S.log[h]=S.log[h]||{})[k]=v}
 const isD=(h,d)=>{const c=getCell(h,d);return !!(c&&c.s==="d")};
-function setCell(h,d,v){const k=mk();if(!v||(!v.s&&!v.n&&!v.t)){if(S.log[k]&&S.log[k][h])delete S.log[k][h][d];return}
- S.log[k]=S.log[k]||{};S.log[k][h]=S.log[k][h]||{};S.log[k][h][d]=v}
-function tap(h,d){const c=getCell(h,d);if(c&&c.s)setCell(h,d,c.n?{n:c.n}:null);else setCell(h,d,Object.assign({},c,{s:"d"}))}
 const val=(h,d)=>{const c=getCell(h,d);return c&&c.s==="d"?(c.p==null?1:c.p):0};
-const fmt=v=>String(Math.round(v*10)/10);
-function cellLabel(h,c){if(!c||c.s!=="d"||c.p==null)return"";const pc=Math.round(c.p*100)+"%";
- if(h.kind==="l")return(c.k?c.k.length:0)+"/"+(c.tot||(h.items||[]).length)+" · "+pc;
- if(h.kind==="a")return c.a+"/"+h.amt+" "+(h.unit||"")+" · "+pc;return pc}
-function quick(hid,d){const x=S.habits.find(q=>q.id===hid);if(!x)return;if((x.kind||"c")==="c"){tap(hid,d);save()}else openCell(hid,d)}
+function tap(h,d){const c=getCell(h,d);if(c&&c.s)setCell(h,d,c.n?{n:c.n}:null);else setCell(h,d,Object.assign({},c,{s:"d"}))}
+function cellLabel(h,c){return c&&c.s==="d"&&c.p!=null?sc10(c.p):""}
+function quick(hid,d){const x=S.habits.find(q=>q.id===hid);if(!x)return;if(!(x.items||[]).length){tap(hid,d);save()}else openCell(hid,d)}
 function stats(h,n){let raw=0,cap=0,goal=0,days=0;const wks=[],r2=v=>Math.round(v*100)/100;
  for(let d=1;d<=n;d++)if(isD(h.id,d))days++;
  if(h.per==="w"){for(let w=0;w*7<n;w++){const a=w*7+1,b=Math.min(a+6,n),len=b-a+1,t=len===7?h.t:Math.min(h.t,Math.ceil(h.t*len/7));let c=0;for(let d=a;d<=b;d++)c+=val(h.id,d);c=r2(c);raw+=c;cap+=Math.min(c,t);goal+=t;wks.push({c,t})}}
  else{for(let d=1;d<=n;d++)raw+=val(h.id,d);raw=r2(raw);goal=Math.min(h.t,n);cap=Math.min(raw,goal)}
  return{raw:r2(raw),cap:r2(cap),goal,days,pct:goal?Math.round(cap/goal*100):0,wks}}
-function streak(h,n){if(h.per==="m")return"";const td=isCur()?now.getDate():n;
- if(h.t===7){let d=td;if(isCur()&&!isD(h.id,d))d--;let s=0;while(d>=1&&isD(h.id,d)){s++;d--}return s+"d"}
- const st=stats(h,n).wks;let w=Math.floor((td-1)/7),s=0;if(isCur()&&st[w].c<st[w].t)w--;
+function streak(h,n){if(h.per==="m")return"";const T0=todayD(),td=T0||n;
+ if(h.t===7){let d=td;if(T0&&!isD(h.id,d))d--;let s=0;while(d>=1&&isD(h.id,d)){s++;d--}return s+"d"}
+ const st=stats(h,n).wks;let w=Math.floor((td-1)/7),s=0;if(T0&&st[w].c<st[w].t)w--;
  for(;w>=0&&st[w].c>=st[w].t;w--)s++;return s+"w"}
 const ring=(p,c,l)=>`<div><div class="ring" style="background:conic-gradient(${c} ${p}%,var(--line) 0)"><b>${p}%</b></div><div class="rl">${l}</div></div>`;
+let jf="all";
 function render(){
- const n=dim(),H=act(),cur=isCur(),T=cur?now.getDate():-1;
- $("mo").textContent=new Date(Y,M,1).toLocaleString("en",{month:"long",year:"numeric"});
+ if(CALV!==S.cal)reView();
+ const n=V.n,H=act(),ti=isoOf(new Date()),T=todayD(),cur=T>0,wl=d=>(S.cal==="j"?WDJ:WDG)[V.dow[d]];
+ $("mo").textContent=V.mname+" "+V.y;$("calb").textContent="📅 "+(S.cal==="j"?"Jalali":"Gregorian");
  let h='<tr><th class="name dn">Habits</th>';
  for(let w=0;w*7<n;w++){const a=w*7+1,b=Math.min(a+6,n);h+=`<th class="wk" colspan="${b-a+1}" style="background:${COL[w]}33;color:${COL[w]}">${WK[w]}</th>`}
  h+='<th class="dn">Target</th><th class="dn">Done</th><th class="dn">Streak</th></tr><tr><th class="name"></th>';
- for(let d=1;d<=n;d++)h+=`<th><button class="dd ${d===T?"td":""}" data-day="${d}">${new Date(Y,M,d).toLocaleString("en",{weekday:"narrow"})}<br>${d}</button></th>`;
+ for(let d=1;d<=n;d++)h+=`<th><button class="dd ${d===T?"td":""} ${S.cal==="j"&&V.dow[d]===5?"fri":""}" data-day="${d}">${wl(d)}<br>${d}</button></th>`;
  h+="<th></th><th></th><th></th></tr>";
  if(!H.length)h+=`<tr><td class="name dn" colspan="${n+4}">No habits this month — tap “+ Habit”.</td></tr>`;
  H.forEach(x=>{const s=stats(x,n),st=streak(x,n),num=parseInt(st),fire=st.endsWith("d")?num>=3:st.endsWith("w")?num>=2:false;
-  const tl=(x.per==="m"?x.t+"×/mo":x.t===7?"Daily":x.t+"×/wk")+(x.kind==="l"?" ☰":x.kind==="a"?" ◔":"");
+  const tl=(x.per==="m"?x.t+"×/mo":x.t===7?"Daily":x.t+"×/wk")+((x.items||[]).length?" ☰":"");
   h+=`<tr><td class="name"><button class="hn" data-edit="${x.id}">${esc(x.n)}</button></td>`;
-  for(let d=1;d<=n;d++){const c=getCell(x.id,d)||{},pt=c.s==="d"&&c.p!=null&&c.p<1;
-   h+=`<td><button class="cb ${c.s==="d"?"on":c.s==="x"?"x":""} ${pt?"part":""} ${c.n||c.t?"has":""} ${d===T?"today":""}" style="--c:${COL[Math.min(4,Math.floor((d-1)/7))]};--pp:${pt?Math.round(c.p*100):0}%" title="${esc(cellLabel(x,c))}" data-h="${x.id}" data-d="${d}" aria-label="${esc(x.n)} day ${d}"></button></td>`}
+  for(let d=1;d<=n;d++){const c=getCell(x.id,d)||{},pt=c.s==="d"&&c.p!=null&&c.p<1;let cls=c.s==="d"?"on":c.s==="x"?"x":"";if(!cls&&x.ax&&V.iso[d]<ti)cls="x auto";
+   h+=`<td><button class="cb ${cls} ${pt?"part":""} ${c.n||c.t||c.bd||(c.k&&c.k.length&&!c.s)?"has":""} ${d===T?"today":""}" style="--c:${COL[Math.min(4,Math.floor((d-1)/7))]};--pp:${pt?Math.round(c.p*100):0}%" title="${esc(cellLabel(x,c))}" data-h="${x.id}" data-d="${d}" aria-label="${esc(x.n)} day ${d}"></button></td>`}
   h+=`<td><button class="tgb" data-edit="${x.id}">${tl}</button></td><td class="cnt">${fmt(s.raw)}/${s.goal}</td><td class="st ${fire?"fire":""}">${fire?"🔥":""}${st||"—"}</td></tr>`});
  h+='<tr><td class="name dn">Day journal</td>';
- for(let d=1;d<=n;d++){const dn=(S.dn[mk()]||{})[d];h+=`<td><button class="dm" data-day="${d}">${dn?(dn.m?MOODS[dn.m-1]:"📝"):"·"}</button></td>`}
+ for(let d=1;d<=n;d++){const dn=S.dn[V.iso[d]];h+=`<td><button class="dm" data-day="${d}">${dn?(dn.m?MOODS[dn.m-1]:"📝"):"·"}</button></td>`}
  h+="<td></td><td></td><td></td></tr>";
  $("t").innerHTML=h;
- // today
  const tb=$("today");
  if(!cur||!H.length)tb.hidden=true;else{tb.hidden=false;let o="";
   H.forEach(x=>{const done=isD(x.id,T),s=stats(x,n);let rem,left,hint;
-   if(x.per==="w"){const w=Math.floor((T-1)/7),q=s.wks[w];rem=q.t-q.c;left=Math.min(w*7+7,n)-T+(done?0:1);hint=rem<=0?"Week goal met ✓":null;if(!hint)hint=`${rem} more this week · ${left} day${left===1?"":"s"} left`}
-   else{rem=s.goal-s.raw;left=n-T+(done?0:1);hint=rem<=0?"Month goal met ✓":`${rem} more this month · ${left} days left`}
-   const warn=rem>0&&rem>=left;if(warn&&rem>left)hint=`Behind by ${rem-left} · ${left} day${left===1?"":"s"} left`;else if(warn)hint=`Every remaining day counts (${left} left)`;
-   o+=`<div class="tr ${warn?"warn":""}"><button class="tq ${done?"on":""}" data-tq="${x.id}" aria-label="Toggle ${esc(x.n)} today"></button><div><b>${esc(x.n)}</b><div class="mu">${hint}</div></div></div>`});
+   if(x.per==="w"){const w=Math.floor((T-1)/7),q=s.wks[w];rem=q.t-q.c;left=Math.min(w*7+7,n)-T+(done?0:1);hint=rem<=0?"Week goal met ✓":`${fmt(rem)} more this week · ${left} day${left===1?"":"s"} left`}
+   else{rem=s.goal-s.raw;left=n-T+(done?0:1);hint=rem<=0?"Month goal met ✓":`${fmt(rem)} more this month · ${left} days left`}
+   const warn=rem>0&&rem>=left;if(warn&&rem>left)hint=`Behind by ${fmt(rem-left)} · ${left} day${left===1?"":"s"} left`;else if(warn)hint=`Every remaining day counts (${left} left)`;
+   o+=`<div class="tr ${warn?"warn":""}"><button class="tq ${done?"on":""}" data-tq="${x.id}" aria-label="Log ${esc(x.n)} today"></button><div><b>${esc(x.n)}</b><div class="mu">${hint}</div></div></div>`});
   $("tlist").innerHTML=o}
- // bars/rings
  let bars="",cap=0,goal=0,pts=0,days=0;
  H.forEach(x=>{const s=stats(x,n);cap+=s.cap;goal+=s.goal;pts+=s.raw;days+=s.days;bars+=`<div class="bar"><span>${esc(x.n)}</span><i><u style="width:${s.pct}%"></u></i><span>${s.pct}%</span></div>`});
  $("bars").innerHTML=bars||'<div class="mu">—</div>';
@@ -172,90 +220,102 @@ function render(){
  if(MH.length){let c=0,t=0;MH.forEach(x=>{const s=stats(x,n);c+=s.cap;t+=s.goal});rg+=ring(Math.round(c/t*100),"#c77dff","Monthly")}
  $("rings").innerHTML=rg;
  const P=goal?Math.round(cap/goal*100):0;$("all").style.background=`conic-gradient(var(--w3) ${P}%,var(--line) 0)`;$("all").firstChild.textContent=P+"%";
- $("allt").textContent=fmt(cap)+" of "+goal+" goal days"+(days&&pts/days<0.995?" · quality "+Math.round(pts/days*100)+"%":"");$("q").textContent=QUOTES[(Y+M)%QUOTES.length];
- // journal
- const k=mk(),items=[],reasons={};
- S.habits.forEach(x=>{const m=(S.log[k]||{})[x.id]||{};for(const d in m){const c=m[d];if(!(c.n||c.t||c.s==="x"))continue;
-  if(c.s==="x"&&c.t)reasons[c.t]=(reasons[c.t]||0)+1;if(jf==="all"||c.s===jf)items.push({d:+d,x,c})}});
- if(jf==="all")for(const d in S.dn[k]||{}){const q=S.dn[k][d];if(q.n||q.m)items.push({d:+d,day:q})}
+ $("allt").textContent=fmt(cap)+" of "+goal+" goal days"+(days?" · avg score "+fmt(pts/days*10)+"/10":"");$("q").textContent=QUOTES[(V.y+V.m)%QUOTES.length];
+ const items=[],reasons={},hz=c=>c.bd?Object.keys(c.bd).map(k=>`<div class="mu">⚠ ${esc(k)} −${esc(c.bd[k].p)}${c.bd[k].w?": "+esc(c.bd[k].w):""}</div>`).join(""):"";
+ S.habits.forEach(x=>{for(let d=1;d<=n;d++){const c=getCell(x.id,d);if(!c||!(c.n||c.t||c.s==="x"||c.bd))continue;
+  if(c.s==="x"&&c.t)reasons[c.t]=(reasons[c.t]||0)+1;if(jf==="all"||c.s===jf)items.push({d,x,c})}});
+ if(jf==="all")for(let d=1;d<=n;d++){const q=S.dn[V.iso[d]];if(q&&(q.n||q.m))items.push({d,day:q})}
  items.sort((a,b)=>b.d-a.d);
  $("jf").innerHTML=[["all","All"],["d","✓ Done"],["x","× Missed"]].map(a=>`<button class="${jf===a[0]?"act":""}" data-jf="${a[0]}">${a[1]}</button>`).join("");
  const rs=Object.entries(reasons).sort((a,b)=>b[1]-a[1]);
  $("why").textContent=rs.length?"Top reasons for missing: "+rs.map(r=>r[0]+" ×"+r[1]).join(" · "):"";
- $("jl").innerHTML=items.map(i=>i.day?`<div class="je" data-day="${i.d}"><span class="jd">${MON()} ${i.d}</span>${i.day.m?MOODS[i.day.m-1]:"📝"} <b>Day</b><div>${esc(i.day.n)}</div></div>`
-  :`<div class="je" data-jh="${i.x.id}" data-jd="${i.d}"><span class="jd">${MON()} ${i.d}</span><span class="${i.c.s==="x"?"bad":"good"}">${i.c.s==="x"?"×":i.c.s==="d"?"✓":"•"}</span> <b>${esc(i.x.n)}</b> <span class="mu">${esc(cellLabel(i.x,i.c))}</span> ${i.c.t?`<em class="tag">${esc(i.c.t)}</em>`:""}<div>${esc(i.c.n||"")}</div></div>`).join("")||'<div class="mu">No notes yet. Hold a box to add one.</div>';
- // notes & archive
- const nt=$("notes");if(document.activeElement!==nt)nt.value=S.mn[k]||"";
- const AR=S.habits.filter(x=>x.arch!=null&&mi()>=x.arch);$("arch").hidden=!AR.length;
+ $("jl").innerHTML=items.map(i=>i.day?`<div class="je" data-day="${i.d}"><span class="jd">${i.d} ${V.mname}</span>${i.day.m?MOODS[i.day.m-1]:"📝"} <b>Day</b><div>${esc(i.day.n)}</div></div>`
+  :`<div class="je" data-jh="${i.x.id}" data-jd="${i.d}"><span class="jd">${i.d} ${V.mname}</span><span class="${i.c.s==="x"?"bad":"good"}">${i.c.s==="x"?"×":i.c.s==="d"?"✓":"•"}</span> <b>${esc(i.x.n)}</b> <span class="mu">${esc(cellLabel(i.x,i.c))}</span> ${i.c.t?`<em class="tag">${esc(i.c.t)}</em>`:""}<div>${esc(i.c.n||"")}</div>${hz(i.c)}</div>`).join("")||'<div class="mu">No notes yet. Hold a box to add one.</div>';
+ const nt=$("notes");if(document.activeElement!==nt)nt.value=S.mn[nk()]||"";
+ const AR=S.habits.filter(x=>x.arch!=null&&V.iso[1]>=x.arch);$("arch").hidden=!AR.length;
  $("al").innerHTML=AR.map(x=>`<div class="tr"><b style="flex:1">${esc(x.n)}</b><button data-rs="${x.id}">Restore</button><button class="dng" data-del="${x.id}">Delete</button></div>`).join("");
  setStat();
 }
 /* ---------- dialogs ---------- */
 const dlg=$("dlg");
-function openHabit(id){if(dlg.open)return;const x=id?S.habits.find(q=>q.id===id):{n:"",per:"w",t:5};if(!x)return;
+function openHabit(id){if(dlg.open)return;const x=id?S.habits.find(q=>q.id===id):{n:"",per:"w",t:5,sm:"s",ax:false,items:[]};if(!x)return;
  const mode=x.per==="m"?"m":x.t===7?"d":"w";
  dlg.innerHTML=`<h3>${id?"Edit habit":"New habit"}</h3>
  <label>Name<input id="hn" value="${esc(x.n)}" maxlength="60"></label>
  <label>How often?<select id="hm"><option value="d">Every day</option><option value="w">Some days each week</option><option value="m">Some days each month</option></select></label>
  <label id="htl">Target days<input id="ht" type="number" min="1" max="31" value="${x.t}"></label>
- <label>How do you log it?<select id="hk"><option value="c">Simple tick</option><option value="l">Checklist of sub-habits (scored)</option><option value="a">Amount, e.g. 30 min (partial credit)</option></select></label>
- <label id="hll">Sub-habits, one per line<textarea id="hit" placeholder="Silence&#10;Breath&#10;Noticing beliefs">${esc((x.items||[]).join("\n"))}</textarea></label>
- <div id="hal" class="row"><label style="flex:1;margin:0">Target amount<input id="hamt" type="number" min="1" step="any" value="${x.amt||30}"></label><label style="flex:1;margin:0">Unit<input id="hunit" value="${esc(x.unit||"min")}" maxlength="12"></label></div>
+ <label>Sub-habits (optional), one per line<textarea id="hit" placeholder="Gym&#10;Running&#10;Swimming">${esc((x.items||[]).map(itemLine).join("\n"))}</textarea></label>
+ <div class="mu">Plain line = counts toward the ✓ · <b>Vitamin D3: 4000 IU</b> = dose (score = taken ÷ target) · <b>*Name</b> = required for the ✓ (e.g. 20+ miles offshore) · <b>~Name</b> = extra, logged but no ✓ · <b>-Name</b> = harm, subtracts points</div>
+ <label>Score<select id="hsm"><option value="s">I rate myself 0–10 each day</option><option value="a">Start from sub-habits done (I can adjust)</option></select></label>
+ <label class="ck"><input type="checkbox" id="hax"> Auto-mark past empty days as ×</label>
  <div class="row"><button class="pri" id="hs">Save</button>${id?'<button id="ha">Archive</button><button class="dng" id="hd">Delete</button>':""}<button data-close>Cancel</button></div>
  ${id?'<div class="mu">Archive hides it from this month onward and keeps past months. Delete erases it and all its history.</div>':""}`;
- $("hm").value=mode;$("hk").value=x.kind||"c";
- const sync=()=>{const m=$("hm").value,k=$("hk").value;$("htl").style.display=m==="d"?"none":"block";$("ht").max=m==="w"?7:31;$("htl").firstChild.textContent=m==="w"?"Days per week (1–7)":"Days per month (1–31)";$("hll").style.display=k==="l"?"block":"none";$("hal").style.display=k==="a"?"flex":"none"};
- $("hm").onchange=sync;$("hk").onchange=sync;sync();
- $("hs").onclick=()=>{const nm=$("hn").value.trim();if(!nm){$("hn").focus();return}const m=$("hm").value,k=$("hk").value;
+ $("hm").value=mode;$("hsm").value=x.sm||"s";$("hax").checked=!!x.ax;
+ const sync=()=>{const m=$("hm").value;$("htl").style.display=m==="d"?"none":"block";$("ht").max=m==="w"?7:31;$("htl").firstChild.textContent=m==="w"?"Days per week (1–7)":"Days per month (1–31)"};
+ $("hm").onchange=sync;sync();
+ $("hs").onclick=()=>{const nm=$("hn").value.trim();if(!nm){$("hn").focus();return}const m=$("hm").value;
   const per=m==="m"?"m":"w",t=m==="d"?7:Math.max(1,Math.min(m==="w"?7:31,parseInt($("ht").value)||1));
-  const items=$("hit").value.split("\n").map(q=>q.trim()).filter(Boolean).slice(0,20),amt=parseFloat($("hamt").value)||0,unit=$("hunit").value.trim()||"min";
-  let kind=k;if(k==="l"&&!items.length)kind="c";if(k==="a"&&amt<=0)kind="c";
-  const f={n:nm,per,t,kind,items:kind==="l"?items:[],amt:kind==="a"?amt:0,unit:kind==="a"?unit:""};
-  if(id)Object.assign(x,f);else S.habits.push(Object.assign({id:rid(),from:mi(),arch:null},f));
+  const f={n:nm,per,t,sm:$("hsm").value,ax:$("hax").checked,items:parseItems($("hit").value)};
+  if(id)Object.assign(x,f);else S.habits.push(Object.assign({id:rid(),from:V.iso[1],arch:null},f));
   dlg.close();save()};
- if(id){$("ha").onclick=()=>{x.arch=mi();dlg.close();save()};$("hd").onclick=()=>delHabit(id)}
+ if(id){$("ha").onclick=()=>{x.arch=V.iso[1];dlg.close();save()};$("hd").onclick=()=>delHabit(id)}
  dlg.showModal()}
 function delHabit(id){const x=S.habits.find(q=>q.id===id);if(!x||!confirm('Delete "'+x.n+'" and all its history? This cannot be undone.'))return;
- S.habits=S.habits.filter(q=>q.id!==id);for(const k in S.log)delete S.log[k][id];if(dlg.open)dlg.close();save()}
+ S.habits=S.habits.filter(q=>q.id!==id);delete S.log[id];if(dlg.open)dlg.close();save()}
 function openCell(hid,d){const x=S.habits.find(q=>q.id===hid);if(!x||dlg.open)return;
- const c=getCell(hid,d)||{},kind=x.kind||"c",items=x.items||[];let st=c.s||"",tag=c.t||"",amt=c.a||0;
- const ck=new Set((c.k||[]).filter(i=>items.includes(i)));
+ const c=getCell(hid,d)||{},items=x.items||[],has=items.length>0,auto=x.sm==="a";
+ const cnt=items.filter(i=>i.t==="c"||i.t==="d"),gates=items.filter(i=>i.t==="g");
+ let st=c.s||"",tag=c.t||"";const ck=new Set(c.k||[]),dz=Object.assign({},c.a),bd=JSON.parse(JSON.stringify(c.bd||{}));
  const CH={d:["Felt great","Easy","Good routine","Did it early","Pushed through"],x:["Tired","Busy","Sick","Forgot","Travel","Low motivation","Weather"]};
- const body=kind==="l"?`<div id="li">${items.map((it,i)=>`<button class="li" data-i="${i}">${esc(it)}</button>`).join("")}</div>`
-  :kind==="a"?`<label>Amount done (${esc(x.unit)})<input id="am" type="number" min="0" step="any" value="${amt||""}"></label><div class="row">${[.25,.5,.75,1].map(f=>`<button data-f="${f}">${Math.round(x.amt*f*10)/10}</button>`).join("")}</div>`:"";
- dlg.innerHTML=`<h3>${esc(x.n)}</h3><div class="mu">${MON()} ${d}, ${Y}</div><div class="scr" id="scr"></div>${body}
- <div class="row">${kind==="c"?'<button id="sd">✓ Done</button>':kind==="l"?'<button id="sa">Check all</button>':""}<button id="sx">× Missed</button><button id="sc">No status</button></div>
+ const num=k=>parseFloat(dz[k])||0;
+ const share=()=>cnt.length?cnt.reduce((a,i)=>a+(i.t==="c"?(ck.has(i.n)?1:0):Math.min(1,num(i.n)/(i.rec||1))),0)/cnt.length:gates.length?(gates.some(g=>ck.has(g.n))?1:0):1;
+ const did=()=>gates.length?gates.some(g=>ck.has(g.n)):cnt.length?cnt.some(i=>i.t==="c"?ck.has(i.n):num(i.n)>0):false;
+ const pen=()=>Object.keys(bd).reduce((a,k)=>a+(parseFloat(bd[k].p)||0),0);
+ let sv=c.sv!=null?c.sv:c.p!=null?c.p*10:10,manual=false;
+ if(auto&&has){manual=c.sv!=null&&Math.abs(c.sv-Math.round(share()*100)/10)>0.05;if(!manual)sv=Math.round(share()*100)/10}
+ const fin=()=>Math.max(0,Math.min(10,Math.round((sv-pen())*10)/10));
+ const row=(i,ix)=>i.t==="d"?`<div class="dr"><span>${esc(i.n)}</span><input type="number" min="0" step="any" inputmode="decimal" data-z="${ix}" value="${dz[i.n]!=null?dz[i.n]:""}"><span class="mu">/ ${i.rec} ${esc(i.unit)}</span></div>`
+  :`<div><button class="li" data-i="${ix}">${i.t==="g"?"★ ":""}${i.t==="b"?"⚠ ":""}${esc(i.n)}${i.t==="x"?' <span class="mu">· doesn\'t count</span>':""}</button>${i.t==="b"?`<div class="bdx" data-b="${ix}"><input type="number" min="0" max="10" step="0.5" data-bp="${ix}" value="${bd[i.n]?bd[i.n].p:2}" title="Points to subtract"><input data-bw="${ix}" placeholder="− points · why do you think this happened?" value="${esc(bd[i.n]?bd[i.n].w:"")}"></div>`:""}</div>`;
+ dlg.innerHTML=`<h3>${esc(x.n)}</h3><div class="mu">${d} ${V.mname} ${V.y} · ${V.iso[d]}</div>
+ ${has?`<div id="li">${items.map(row).join("")}</div>`:""}
+ <div class="row">${has?"":'<button id="sd">✓ Done</button>'}<button id="sx">× Missed</button><button id="sc">No status</button></div>
+ <div id="sw"><label>Score: <b id="sn"></b> / 10<input id="sr" type="range" min="0" max="10" step="0.1"></label><div class="scr" id="scr"></div></div>
  <div class="row" id="chips"></div>
- <textarea id="cn" placeholder="Why was it done / missed? What did you learn today?">${esc(c.n||"")}</textarea>
+ <textarea id="cn" placeholder="Why this score / why done or missed? What did you learn today?">${esc(c.n||"")}</textarea>
  <div class="row"><button class="pri" id="cs">Save</button><button data-close>Cancel</button></div>`;
- const score=()=>kind==="l"?(items.length?ck.size/items.length:0):kind==="a"?(x.amt?Math.min(1,amt/x.amt):0):(st==="d"?1:0);
- const paint=()=>{if(kind!=="c"){const q=score();if(q>0)st="d";else if(st==="d")st=""}
-  if($("sd"))$("sd").classList.toggle("act",st==="d");$("sx").classList.toggle("act",st==="x");$("sc").classList.toggle("act",!st);
-  if(kind==="l"){document.querySelectorAll(".li").forEach(b=>b.classList.toggle("act",ck.has(items[+b.dataset.i])));$("scr").textContent=ck.size+"/"+items.length+" · "+Math.round(score()*100)+"%"}
-  if(kind==="a")$("scr").textContent=(amt||0)+"/"+x.amt+" "+x.unit+" · "+Math.round(score()*100)+"%";
+ const paint=()=>{if(has){if(did())st="d";else if(st==="d")st=""}
+  if(has&&auto&&!manual)sv=Math.round(share()*100)/10;
+  $("sx").classList.toggle("act",st==="x");$("sc").classList.toggle("act",!st);if($("sd"))$("sd").classList.toggle("act",st==="d");
+  dlg.querySelectorAll(".li").forEach(b=>{const i=items[+b.dataset.i],on=i.t==="b"?!!bd[i.n]:ck.has(i.n);b.classList.toggle("act",on);if(i.t==="b")dlg.querySelector(`[data-b="${b.dataset.i}"]`).style.display=on?"flex":"none"});
+  $("sw").style.display=st==="d"?"block":"none";$("sr").value=sv;$("sn").textContent=fmt(sv);
+  $("scr").textContent="Final: "+fmt(fin())+"/10"+(pen()?" (−"+fmt(pen())+" harm)":"");
   $("chips").innerHTML=(CH[st]||[]).map(t=>`<button class="chip ${t===tag?"act":""}" data-chip="${esc(t)}">${esc(t)}</button>`).join("")};
  const unx=()=>{if(st==="x"){st="";tag=""}};
+ const wipe=()=>{items.forEach(i=>{if(i.t==="c"||i.t==="g")ck.delete(i.n);if(i.t==="d")delete dz[i.n];if(i.t==="b")delete bd[i.n]});dlg.querySelectorAll("[data-z]").forEach(q=>q.value="")};
  if($("sd"))$("sd").onclick=()=>{st="d";tag="";paint()};
- if($("sa"))$("sa").onclick=()=>{unx();items.forEach(i=>ck.add(i));paint()};
- if($("li"))$("li").onclick=e=>{const b=e.target.closest("[data-i]");if(!b)return;unx();const it=items[+b.dataset.i];ck.has(it)?ck.delete(it):ck.add(it);paint()};
- if($("am")){$("am").oninput=()=>{amt=parseFloat($("am").value)||0;if(amt>0)unx();paint()};
-  dlg.querySelectorAll("[data-f]").forEach(b=>b.onclick=()=>{amt=Math.round(x.amt*parseFloat(b.dataset.f)*10)/10;$("am").value=amt;unx();paint()})}
- const wipe=()=>{ck.clear();amt=0;if($("am"))$("am").value=""};
  $("sx").onclick=()=>{wipe();st="x";tag="";paint()};$("sc").onclick=()=>{wipe();st="";tag="";paint()};
+ $("sr").oninput=()=>{sv=parseFloat($("sr").value)||0;manual=true;paint()};
  $("chips").onclick=e=>{const b=e.target.closest("[data-chip]");if(b){tag=tag===b.dataset.chip?"":b.dataset.chip;paint()}};
- $("cs").onclick=()=>{const nn=$("cn").value.trim(),q=Math.round(score()*100)/100;const v={s:st||undefined,n:nn||undefined,t:tag||undefined};
-  if(st==="d"&&kind==="l"){v.k=[...ck];v.tot=items.length;v.p=q}
-  if(st==="d"&&kind==="a"){v.a=amt;v.p=q}
+ const L=$("li");
+ if(L){L.onclick=e=>{const b=e.target.closest(".li");if(!b)return;const i=items[+b.dataset.i];
+   if(i.t==="b"){if(bd[i.n])delete bd[i.n];else bd[i.n]={p:2,w:""};unx()}else{ck.has(i.n)?ck.delete(i.n):ck.add(i.n);if(i.t!=="x")unx()}paint()};
+  L.oninput=e=>{const t=e.target;
+   if(t.dataset.z!==undefined){const i=items[+t.dataset.z];dz[i.n]=t.value;if(num(i.n)>0)unx()}
+   else if(t.dataset.bp!==undefined){const i=items[+t.dataset.bp];if(bd[i.n])bd[i.n].p=parseFloat(t.value)||0}
+   else if(t.dataset.bw!==undefined){const i=items[+t.dataset.bw];if(bd[i.n])bd[i.n].w=t.value}
+   paint()}}
+ $("cs").onclick=()=>{const nn=$("cn").value.trim(),v={s:st||undefined,n:nn||undefined,t:tag||undefined},kk=[...ck];if(kk.length)v.k=kk;
+  if(st==="d"){v.sv=Math.round(sv*10)/10;v.p=Math.round(fin()*10)/100;const a={};Object.keys(dz).forEach(k=>{const q=parseFloat(dz[k]);if(q>0)a[k]=q});if(Object.keys(a).length)v.a=a;if(Object.keys(bd).length)v.bd=bd}
   setCell(hid,d,v);dlg.close();save()};
  paint();dlg.showModal()}
-function openDay(d){if(dlg.open)return;const q=(S.dn[mk()]||{})[d]||{};let m=q.m||0;
- dlg.innerHTML=`<h3>Day journal</h3><div class="mu">${MON()} ${d}, ${Y}</div>
+function openDay(d){if(dlg.open)return;const q=S.dn[V.iso[d]]||{};let m=q.m||0;
+ dlg.innerHTML=`<h3>Day journal</h3><div class="mu">${d} ${V.mname} ${V.y} · ${V.iso[d]}</div>
  <div class="row" id="md">${MOODS.map((e,i)=>`<button class="mood" data-m="${i+1}">${e}</button>`).join("")}</div>
  <textarea id="dnt" placeholder="How was today overall? What worked, what didn't?">${esc(q.n||"")}</textarea>
  <div class="row"><button class="pri" id="ds">Save</button><button data-close>Cancel</button></div>`;
  const paint=()=>document.querySelectorAll("#md .mood").forEach(b=>b.classList.toggle("act",+b.dataset.m===m));
  $("md").onclick=e=>{const b=e.target.closest("[data-m]");if(b){m=m===+b.dataset.m?0:+b.dataset.m;paint()}};
- $("ds").onclick=()=>{const k=mk(),nn=$("dnt").value.trim();S.dn[k]=S.dn[k]||{};if(!m&&!nn)delete S.dn[k][d];else S.dn[k][d]={m,n:nn};dlg.close();save()};
+ $("ds").onclick=()=>{const k=V.iso[d],nn=$("dnt").value.trim();if(!m&&!nn)delete S.dn[k];else S.dn[k]={m,n:nn};dlg.close();save()};
  paint();dlg.showModal()}
 /* ---------- events ---------- */
 const TB=$("t");let lp=null,lpFired=false;
@@ -267,18 +327,19 @@ document.addEventListener("click",e=>{const t=e.target;let b;
  if(t.closest("[data-close]")){dlg.close();return}
  if(b=t.closest("[data-edit]")){openHabit(b.dataset.edit);return}
  if(b=t.closest("[data-day]")){openDay(+b.dataset.day);return}
- if(b=t.closest("[data-tq]")){quick(b.dataset.tq,now.getDate());return}
+ if(b=t.closest("[data-tq]")){quick(b.dataset.tq,todayD());return}
  if(b=t.closest("[data-jf]")){jf=b.dataset.jf;render();return}
  if(b=t.closest("[data-jh]")){openCell(b.dataset.jh,+b.dataset.jd);return}
  if(b=t.closest("[data-rs]")){const x=S.habits.find(q=>q.id===b.dataset.rs);if(x){x.arch=null;save()}return}
  if(b=t.closest("[data-del]")){delHabit(b.dataset.del)}});
-$("notes").addEventListener("input",e=>{S.mn[mk()]=e.target.value;touch()});
-$("prev").onclick=()=>{M--;if(M<0){M=11;Y--}render()};
-$("next").onclick=()=>{M++;if(M>11){M=0;Y++}render()};
+$("notes").addEventListener("input",e=>{S.mn[nk()]=e.target.value;touch()});
+$("prev").onclick=()=>{let y=vy,m=vm-1;if(m<0){m=11;y--}setView(y,m);render()};
+$("next").onclick=()=>{let y=vy,m=vm+1;if(m>11){m=0;y++}setView(y,m);render()};
 $("add").onclick=()=>openHabit(null);
+$("calb").onclick=()=>{const mid=new Date(V.iso[Math.min(15,V.n)]+"T12:00:00");S.cal=S.cal==="j"?"g":"j";CALV=S.cal;const q=curYM(mid);setView(q[0],q[1]);save()};
 $("exp").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:"application/json"}));a.download="habit-backup-"+new Date().toISOString().slice(0,10)+".json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
 $("imp").onclick=()=>$("file").click();
-$("file").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{let d=JSON.parse(r.result);if(!Array.isArray(d.habits))throw 0;if(d.v!==2)d=migrate(d);if(!confirm("Replace current data with this backup?"))return;S=norm(d);save()}catch(x){alert("Not a valid backup file.")}};r.readAsText(f);e.target.value=""};
+$("file").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.habits))throw 0;if(!confirm("Replace current data with this backup?"))return;S=up(d);save()}catch(x){alert("Not a valid backup file.")}};r.readAsText(f);e.target.value=""};
 /* ---------- cloud sync (Firebase: email + Google) ---------- */
 let fb=false,auth=null,db=null,user=null,unsub=null,pushT=null,state="";
 const cfgOk=()=>{const c=window.FIREBASE_CONFIG;return !!(c&&c.apiKey&&!String(c.apiKey).startsWith("PASTE"))};
@@ -296,9 +357,8 @@ function onUser(u){user=u;if(unsub){unsub();unsub=null}if(!u){setStat();return}s
 function takeRemote(d){S=norm(JSON.parse(d.data));S.updated=d.updated;S.synced=d.updated;persist();render()}
 function merge(L,R){const o=norm(JSON.parse(JSON.stringify(R)));
  L.habits.forEach(h=>{const i=o.habits.findIndex(x=>x.id===h.id);if(i<0)o.habits.push(h);else o.habits[i]=h});
- for(const m in L.log)for(const h in L.log[m])for(const d in L.log[m][h]){o.log[m]=o.log[m]||{};o.log[m][h]=o.log[m][h]||{};o.log[m][h][d]=L.log[m][h][d]}
- for(const m in L.dn)for(const d in L.dn[m]){o.dn[m]=o.dn[m]||{};o.dn[m][d]=L.dn[m][d]}
- Object.assign(o.mn,L.mn);return o}
+ for(const h in L.log)for(const d in L.log[h]){(o.log[h]=o.log[h]||{})[d]=L.log[h][d]}
+ Object.assign(o.dn,L.dn);Object.assign(o.mn,L.mn);o.cal=L.cal;return o}
 async function reconcile(){if(!user||!db)return;
  if(!navigator.onLine){setStat("☁ Offline");return}
  try{const snap=await ref().get();
