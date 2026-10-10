@@ -74,8 +74,6 @@ input[type=checkbox]{width:auto;margin-right:6px}label.ck{display:flex;align-ite
 .li{width:100%}.dr{display:grid;grid-template-columns:1fr 90px auto;gap:8px;align-items:center}
 .bdx{display:none;gap:6px;margin-top:4px}.bdx input:first-child{width:70px;flex:none}.li.act{border-color:var(--good)}
 .cb.x.auto{opacity:.4}
-.layout{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin-bottom:6px}.layout .card{margin-bottom:0}
-@media(min-width:1350px){.layout{grid-template-columns:minmax(0,1fr) 290px}.side{position:sticky;top:12px;align-self:start}}
 .tabs{display:flex;gap:6px;margin-bottom:10px}.tabs button{flex:1;padding:6px 4px}
 .sh{padding:8px 0;border-bottom:1px solid var(--line)}.sh:last-child{border:0}.sht{display:flex;align-items:center;gap:6px;margin-bottom:6px}.sht .hn{flex:1}
 .pr{display:grid;grid-template-columns:repeat(auto-fill,minmax(36px,1fr));gap:6px}.pb{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:var(--mu)}
@@ -89,14 +87,14 @@ details summary{cursor:pointer;margin-top:10px;font-weight:600}.re{display:flex;
   <h1><img src="icon-192.png" alt="" width="22" height="22" style="border-radius:5px" onerror="this.remove()">HABIT TRACKER</h1>
   <div class="nav"><button id="prev">‹</button><span class="mo" id="mo"></span><button id="next">›</button><button id="add">+ Habit</button><button id="ro" title="Reorder habits">↕ Order</button><button id="calb" title="Switch calendar">📅</button><button id="sync">☁ Sync</button><button id="exp" title="Download backup file">⬇</button><button id="imp" title="Restore from backup file">⬆</button><input type="file" id="file" accept="application/json" hidden></div>
 </div>
-<div class="layout"><div class="main"><div class="card scroll"><table id="t"></table></div>
-<div class="hint">Tap a box = ✓ &nbsp;·&nbsp; Hold (or right-click) = note / mark missed × &nbsp;·&nbsp; Tap a day number or the bottom row = day journal &nbsp;·&nbsp; Tap a habit name = edit / objective / archive / delete</div></div>
-<div class="card side" id="side"><div class="tabs" id="tabs"></div><div id="sbody"></div></div></div>
+<div class="card scroll"><table id="t"></table></div>
+<div class="hint">Tap a box = ✓ &nbsp;·&nbsp; Hold (or right-click) = note / mark missed × &nbsp;·&nbsp; Tap a day number or the bottom row = day journal &nbsp;·&nbsp; Tap a habit name = edit / objective / archive / delete</div>
 <br>
 <div class="grid">
   <div class="card"><h2>Weekly progress</h2><div class="rings" id="rings"></div></div>
   <div class="card"><h2>Progress by habit</h2><div id="bars"></div></div>
   <div class="card"><h2>Overall</h2><div class="rings"><div><div class="ring" id="all"><b></b></div><div class="rl" id="allt"></div></div></div><div class="mu" id="q" style="text-align:center;margin-top:8px"></div></div>
+  <div class="card side" id="side"><div class="tabs" id="tabs"></div><div id="sbody"></div></div>
   <div class="card wide"><h2>Why log</h2><div class="row" id="jf"></div><div class="mu" id="why"></div><div id="jl"></div></div>
   <div class="card"><h2>Month notes</h2><textarea id="notes" placeholder="Reminders, wins, lessons this month…"></textarea></div>
   <div class="card" id="arch" hidden><h2>Archived habits</h2><div id="al"></div></div>
