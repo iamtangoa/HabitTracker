@@ -66,25 +66,32 @@ textarea{min-height:90px;resize:vertical}
 .tag,.chip{font-style:normal;font-size:11px;border:1px solid var(--line);border-radius:20px;padding:2px 9px}
 .chip.act,.act{border-color:#2f7bff;background:#2f7bff33}
 .row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
-dialog{background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:14px;width:min(430px,92vw);padding:16px}
+dialog{max-height:90vh;overflow:auto;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:14px;width:min(430px,92vw);padding:16px}
 dialog::backdrop{background:#000a}
 dialog h3{margin:0 0 4px}dialog label{display:block;margin:10px 0 0;font-size:12px;color:var(--mu)}
 .mood{font-size:20px;padding:4px 8px}
 input[type=checkbox]{width:auto;margin-right:6px}label.ck{display:flex;align-items:center;color:var(--tx);font-size:13px}
 .li{width:100%}.dr{display:grid;grid-template-columns:1fr 90px auto;gap:8px;align-items:center}
 .bdx{display:none;gap:6px;margin-top:4px}.bdx input:first-child{width:70px;flex:none}.li.act{border-color:var(--good)}
-.cb.x.auto{opacity:.4}.dd.fri{color:var(--bad)}
+.cb.x.auto{opacity:.4}
+.layout{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin-bottom:6px}.layout .card{margin-bottom:0}
+@media(min-width:1350px){.layout{grid-template-columns:minmax(0,1fr) 290px}.side{position:sticky;top:12px;align-self:start}}
+.tabs{display:flex;gap:6px;margin-bottom:10px}.tabs button{flex:1;padding:6px 4px}
+.sh{padding:8px 0;border-bottom:1px solid var(--line)}.sh:last-child{border:0}.sht{display:flex;align-items:center;gap:6px;margin-bottom:6px}.sht .hn{flex:1}
+.pr{display:grid;grid-template-columns:repeat(auto-fill,minmax(36px,1fr));gap:6px}.pb{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:var(--mu)}
+.nm{display:flex;gap:4px;align-items:center}.mv{display:inline-flex;flex:none}.mv button{padding:0 5px;font-size:10px;line-height:18px}
+details summary{cursor:pointer;margin-top:10px;font-weight:600}.re{display:flex;gap:6px;align-items:flex-start;font-size:12px;margin:4px 0}.re button{padding:0 6px;margin-left:auto}.dd.fri{color:var(--bad)}
 .cb.on.part{background:linear-gradient(to top,var(--c) var(--pp),transparent var(--pp))}.cb.on.part::before{content:""}
 #li{display:grid;gap:6px;margin:10px 0}.li{text-align:left;padding:10px 12px}.li::before{content:"○ ";color:var(--mu)}.li.act::before{content:"● ";color:var(--good)}
 .scr{font-weight:700;margin-top:8px}
 </style></head><body>
 <div class="top">
   <h1><img src="icon-192.png" alt="" width="22" height="22" style="border-radius:5px" onerror="this.remove()">HABIT TRACKER</h1>
-  <div class="nav"><button id="prev">‹</button><span class="mo" id="mo"></span><button id="next">›</button><button id="add">+ Habit</button><button id="calb" title="Switch calendar">📅</button><button id="sync">☁ Sync</button><button id="exp" title="Download backup file">⬇</button><button id="imp" title="Restore from backup file">⬆</button><input type="file" id="file" accept="application/json" hidden></div>
+  <div class="nav"><button id="prev">‹</button><span class="mo" id="mo"></span><button id="next">›</button><button id="add">+ Habit</button><button id="ro" title="Reorder habits">↕ Order</button><button id="calb" title="Switch calendar">📅</button><button id="sync">☁ Sync</button><button id="exp" title="Download backup file">⬇</button><button id="imp" title="Restore from backup file">⬆</button><input type="file" id="file" accept="application/json" hidden></div>
 </div>
-<div class="card" id="today" hidden><h2>Today</h2><div id="tlist"></div></div>
-<div class="card scroll"><table id="t"></table></div>
-<div class="hint">Tap a box = ✓ &nbsp;·&nbsp; Hold (or right-click) = note / mark missed × &nbsp;·&nbsp; Tap a day number or the bottom row = day journal &nbsp;·&nbsp; Tap a habit name = edit / archive / delete</div>
+<div class="layout"><div class="main"><div class="card scroll"><table id="t"></table></div>
+<div class="hint">Tap a box = ✓ &nbsp;·&nbsp; Hold (or right-click) = note / mark missed × &nbsp;·&nbsp; Tap a day number or the bottom row = day journal &nbsp;·&nbsp; Tap a habit name = edit / objective / archive / delete</div></div>
+<div class="card side" id="side"><div class="tabs" id="tabs"></div><div id="sbody"></div></div></div>
 <br>
 <div class="grid">
   <div class="card"><h2>Weekly progress</h2><div class="rings" id="rings"></div></div>
@@ -165,8 +172,16 @@ const todayD=()=>Math.max(0,V.iso.indexOf(isoOf(new Date())));
 const isCur=()=>todayD()>0;
 const nk=()=>S.cal+":"+vy+"-"+vm;
 const act=()=>S.habits.filter(h=>(h.from||"")<=V.iso[V.n]&&(h.arch==null||V.iso[1]<h.arch));
+let tab="w",reorder=false;const SN={w:"Weekly",m:"Monthly",y:"Yearly"};
 const getCell=(h,d)=>(S.log[h]||{})[V.iso[d]];
-function setCell(h,d,v){const k=V.iso[d];if(!v||(!v.s&&!v.n&&!v.t&&!(v.k&&v.k.length)&&!v.a&&!v.bd)){if(S.log[h])delete S.log[h][k];return}(S.log[h]=S.log[h]||{})[k]=v}
+function setK(h,k,v){if(!v||(!v.s&&!v.n&&!v.t&&!(v.k&&v.k.length)&&!v.a&&!v.bd)){if(S.log[h])delete S.log[h][k];return}(S.log[h]=S.log[h]||{})[k]=v}
+const setCell=(h,d,v)=>setK(h,V.iso[d],v);
+function pcell(h,rs,re){const m=S.log[h]||{};for(const k in m)if(k>=rs&&k<=re)return[k,m[k]];return[rs,null]}
+function ptap(h,rs,re){const[k,c]=pcell(h,rs,re);if(c&&c.s)setK(h,k,c.n?{n:c.n}:null);else setK(h,k,Object.assign({},c,{s:"d"}))}
+function dstr(iso){if(S.cal==="g")return iso;const p=jp(new Date(iso+"T12:00:00"));return p.d+" "+JM[p.m-1]+" "+p.y}
+const mvb=id=>`<span class="mv"><button data-mv="${id}|-1">▲</button><button data-mv="${id}|1">▼</button></span>`;
+function move(id,dir){const x=S.habits.find(q=>q.id===id);if(!x)return;const sec=x.sec||"d",pe=act().filter(h=>(h.sec||"d")===sec),i=pe.findIndex(q=>q.id===id),j=i+dir;if(j<0||j>=pe.length)return;
+ const a=S.habits.indexOf(pe[i]),b=S.habits.indexOf(pe[j]);[S.habits[a],S.habits[b]]=[S.habits[b],S.habits[a]];save()}
 const isD=(h,d)=>{const c=getCell(h,d);return !!(c&&c.s==="d")};
 const val=(h,d)=>{const c=getCell(h,d);return c&&c.s==="d"?(c.p==null?1:c.p):0};
 function tap(h,d){const c=getCell(h,d);if(c&&c.s)setCell(h,d,c.n?{n:c.n}:null);else setCell(h,d,Object.assign({},c,{s:"d"}))}
@@ -185,8 +200,8 @@ const ring=(p,c,l)=>`<div><div class="ring" style="background:conic-gradient(${c
 let jf="all";
 function render(){
  if(CALV!==S.cal)reView();
- const n=V.n,H=act(),ti=isoOf(new Date()),T=todayD(),cur=T>0,wl=d=>(S.cal==="j"?WDJ:WDG)[V.dow[d]];
- $("mo").textContent=V.mname+" "+V.y;$("calb").textContent="📅 "+(S.cal==="j"?"Jalali":"Gregorian");
+ const n=V.n,H=act().filter(h=>(h.sec||"d")==="d"),ti=isoOf(new Date()),T=todayD(),cur=T>0,wl=d=>(S.cal==="j"?WDJ:WDG)[V.dow[d]];
+ $("mo").textContent=V.mname+" "+V.y;$("calb").textContent="📅 "+(S.cal==="j"?"Jalali":"Gregorian");$("ro").textContent=reorder?"✓ Done":"↕ Order";
  let h='<tr><th class="name dn">Habits</th>';
  for(let w=0;w*7<n;w++){const a=w*7+1,b=Math.min(a+6,n);h+=`<th class="wk" colspan="${b-a+1}" style="background:${COL[w]}33;color:${COL[w]}">${WK[w]}</th>`}
  h+='<th class="dn">Target</th><th class="dn">Done</th><th class="dn">Streak</th></tr><tr><th class="name"></th>';
@@ -195,7 +210,7 @@ function render(){
  if(!H.length)h+=`<tr><td class="name dn" colspan="${n+4}">No habits this month — tap “+ Habit”.</td></tr>`;
  H.forEach(x=>{const s=stats(x,n),st=streak(x,n),num=parseInt(st),fire=st.endsWith("d")?num>=3:st.endsWith("w")?num>=2:false;
   const tl=(x.per==="m"?x.t+"×/mo":x.t===7?"Daily":x.t+"×/wk")+((x.items||[]).length?" ☰":"");
-  h+=`<tr><td class="name"><button class="hn" data-edit="${x.id}">${esc(x.n)}</button></td>`;
+  h+=`<tr><td class="name"><div class="nm">${reorder?mvb(x.id):""}<button class="hn" data-edit="${x.id}" title="${esc(x.why||"")}">${x.why?"🎯 ":""}${esc(x.n)}</button></div></td>`;
   for(let d=1;d<=n;d++){const c=getCell(x.id,d)||{},pt=c.s==="d"&&c.p!=null&&c.p<1;let cls=c.s==="d"?"on":c.s==="x"?"x":"";if(!cls&&x.ax&&V.iso[d]<ti)cls="x auto";
    h+=`<td><button class="cb ${cls} ${pt?"part":""} ${c.n||c.t||c.bd||(c.k&&c.k.length&&!c.s)?"has":""} ${d===T?"today":""}" style="--c:${COL[Math.min(4,Math.floor((d-1)/7))]};--pp:${pt?Math.round(c.p*100):0}%" title="${esc(cellLabel(x,c))}" data-h="${x.id}" data-d="${d}" aria-label="${esc(x.n)} day ${d}"></button></td>`}
   h+=`<td><button class="tgb" data-edit="${x.id}">${tl}</button></td><td class="cnt">${fmt(s.raw)}/${s.goal}</td><td class="st ${fire?"fire":""}">${fire?"🔥":""}${st||"—"}</td></tr>`});
@@ -203,14 +218,6 @@ function render(){
  for(let d=1;d<=n;d++){const dn=S.dn[V.iso[d]];h+=`<td><button class="dm" data-day="${d}">${dn?(dn.m?MOODS[dn.m-1]:"📝"):"·"}</button></td>`}
  h+="<td></td><td></td><td></td></tr>";
  $("t").innerHTML=h;
- const tb=$("today");
- if(!cur||!H.length)tb.hidden=true;else{tb.hidden=false;let o="";
-  H.forEach(x=>{const done=isD(x.id,T),s=stats(x,n);let rem,left,hint;
-   if(x.per==="w"){const w=Math.floor((T-1)/7),q=s.wks[w];rem=q.t-q.c;left=Math.min(w*7+7,n)-T+(done?0:1);hint=rem<=0?"Week goal met ✓":`${fmt(rem)} more this week · ${left} day${left===1?"":"s"} left`}
-   else{rem=s.goal-s.raw;left=n-T+(done?0:1);hint=rem<=0?"Month goal met ✓":`${fmt(rem)} more this month · ${left} days left`}
-   const warn=rem>0&&rem>=left;if(warn&&rem>left)hint=`Behind by ${fmt(rem-left)} · ${left} day${left===1?"":"s"} left`;else if(warn)hint=`Every remaining day counts (${left} left)`;
-   o+=`<div class="tr ${warn?"warn":""}"><button class="tq ${done?"on":""}" data-tq="${x.id}" aria-label="Log ${esc(x.n)} today"></button><div><b>${esc(x.n)}</b><div class="mu">${hint}</div></div></div>`});
-  $("tlist").innerHTML=o}
  let bars="",cap=0,goal=0,pts=0,days=0;
  H.forEach(x=>{const s=stats(x,n);cap+=s.cap;goal+=s.goal;pts+=s.raw;days+=s.days;bars+=`<div class="bar"><span>${esc(x.n)}</span><i><u style="width:${s.pct}%"></u></i><span>${s.pct}%</span></div>`});
  $("bars").innerHTML=bars||'<div class="mu">—</div>';
@@ -222,7 +229,7 @@ function render(){
  const P=goal?Math.round(cap/goal*100):0;$("all").style.background=`conic-gradient(var(--w3) ${P}%,var(--line) 0)`;$("all").firstChild.textContent=P+"%";
  $("allt").textContent=fmt(cap)+" of "+goal+" goal days"+(days?" · avg score "+fmt(pts/days*10)+"/10":"");$("q").textContent=QUOTES[(V.y+V.m)%QUOTES.length];
  const items=[],reasons={},hz=c=>c.bd?Object.keys(c.bd).map(k=>`<div class="mu">⚠ ${esc(k)} −${esc(c.bd[k].p)}${c.bd[k].w?": "+esc(c.bd[k].w):""}</div>`).join(""):"";
- S.habits.forEach(x=>{for(let d=1;d<=n;d++){const c=getCell(x.id,d);if(!c||!(c.n||c.t||c.s==="x"||c.bd))continue;
+ S.habits.filter(x=>(x.sec||"d")==="d").forEach(x=>{for(let d=1;d<=n;d++){const c=getCell(x.id,d);if(!c||!(c.n||c.t||c.s==="x"||c.bd))continue;
   if(c.s==="x"&&c.t)reasons[c.t]=(reasons[c.t]||0)+1;if(jf==="all"||c.s===jf)items.push({d,x,c})}});
  if(jf==="all")for(let d=1;d<=n;d++){const q=S.dn[V.iso[d]];if(q&&(q.n||q.m))items.push({d,day:q})}
  items.sort((a,b)=>b.d-a.d);
@@ -234,36 +241,57 @@ function render(){
  const nt=$("notes");if(document.activeElement!==nt)nt.value=S.mn[nk()]||"";
  const AR=S.habits.filter(x=>x.arch!=null&&V.iso[1]>=x.arch);$("arch").hidden=!AR.length;
  $("al").innerHTML=AR.map(x=>`<div class="tr"><b style="flex:1">${esc(x.n)}</b><button data-rs="${x.id}">Restore</button><button class="dng" data-del="${x.id}">Delete</button></div>`).join("");
- setStat();
+ renderSide(T);setStat();
 }
+function pbox(x,rs,re,lab,col,cur){const[,c0]=pcell(x.id,rs,re),c=c0||{},pt=c.s==="d"&&c.p!=null&&c.p<1;
+ return `<div class="pb"><button class="cb ${c.s==="d"?"on":c.s==="x"?"x":""} ${pt?"part":""} ${c.n||c.t||c.bd?"has":""} ${cur?"today":""}" style="--c:${col};--pp:${pt?Math.round(c.p*100):0}%" title="${esc(cellLabel(x,c))}" data-ph="${x.id}" data-pa="${rs}" data-pb="${re}" data-pl="${esc(lab)}"></button><span>${esc(lab)}</span></div>`}
+function renderSide(T){const H=act().filter(h=>h.sec===tab),n=V.n;
+ $("tabs").innerHTML=Object.keys(SN).map(k=>`<button class="${tab===k?"act":""}" data-tab="${k}">${SN[k]}</button>`).join("");
+ let o="",R=[];
+ if(tab==="m")for(let m=0;m<12;m++){const b=build(vy,m);R.push([b.iso[1],b.iso[b.n],S.cal==="g"?new Date(vy,m,1).toLocaleString("en",{month:"short"}):JM[m].slice(0,3),"#c77dff",m===vm])}
+ if(tab==="y")for(let y=vy-3;y<=vy;y++){const a=build(y,0),b=build(y,11);R.push([a.iso[1],b.iso[b.n],String(y),"#ffb020",y===vy])}
+ if(tab==="w")for(let w=0;w*7<n;w++){const a=w*7+1,b=Math.min(a+6,n);R.push([V.iso[a],V.iso[b],"W"+(w+1),COL[w],T>=a&&T<=b])}
+ H.forEach(x=>{const bx=R.map(r=>pbox(x,r[0],r[1],r[2],r[3],r[4])).join(""),dn=(bx.match(/class="cb on/g)||[]).length;
+  o+=`<div class="sh"><div class="sht">${reorder?mvb(x.id):""}<button class="hn" data-edit="${x.id}" title="${esc(x.why||"")}">${x.why?"🎯 ":""}${esc(x.n)}</button><span class="mu">${dn}/${R.length}</span></div><div class="pr">${bx}</div></div>`});
+ $("sbody").innerHTML=o||`<div class="mu">No ${SN[tab].toLowerCase()} habits yet. Tap “+ Habit” and choose ${SN[tab]} as its section.</div>`}
 /* ---------- dialogs ---------- */
 const dlg=$("dlg");
-function openHabit(id){if(dlg.open)return;const x=id?S.habits.find(q=>q.id===id):{n:"",per:"w",t:5,sm:"s",ax:false,items:[]};if(!x)return;
- const mode=x.per==="m"?"m":x.t===7?"d":"w";
+function openHabit(id){if(dlg.open)return;const x=id?S.habits.find(q=>q.id===id):{n:"",sec:"d",per:"w",t:5,sm:"s",ax:false,items:[]};if(!x)return;
+ const mode=x.per==="m"?"m":x.t===7?"d":"w";let res=(x.res||[]).slice();
  dlg.innerHTML=`<h3>${id?"Edit habit":"New habit"}</h3>
  <label>Name<input id="hn" value="${esc(x.n)}" maxlength="60"></label>
- <label>How often?<select id="hm"><option value="d">Every day</option><option value="w">Some days each week</option><option value="m">Some days each month</option></select></label>
- <label id="htl">Target days<input id="ht" type="number" min="1" max="31" value="${x.t}"></label>
+ <label>Section<select id="hsec"><option value="d">Daily (main grid)</option><option value="w">Weekly (one tick per week)</option><option value="m">Monthly (one tick per month)</option><option value="y">Yearly (one tick per year)</option></select></label>
+ <div id="hfq"><label>How often?<select id="hm"><option value="d">Every day</option><option value="w">Some days each week</option><option value="m">Some days each month</option></select></label>
+ <label id="htl">Target days<input id="ht" type="number" min="1" max="31" value="${x.t}"></label></div>
  <label>Sub-habits (optional), one per line<textarea id="hit" placeholder="Gym&#10;Running&#10;Swimming">${esc((x.items||[]).map(itemLine).join("\n"))}</textarea></label>
- <div class="mu">Plain line = counts toward the ✓ · <b>Vitamin D3: 4000 IU</b> = dose (score = taken ÷ target) · <b>*Name</b> = required for the ✓ (e.g. 20+ miles offshore) · <b>~Name</b> = extra, logged but no ✓ · <b>-Name</b> = harm, subtracts points</div>
- <label>Score<select id="hsm"><option value="s">I rate myself 0–10 each day</option><option value="a">Start from sub-habits done (I can adjust)</option></select></label>
- <label class="ck"><input type="checkbox" id="hax"> Auto-mark past empty days as ×</label>
+ <div class="mu">Plain line = counts toward the ✓ · <b>Vitamin D3: 4000 IU</b> = dose (score = taken ÷ target) · <b>*Name</b> = required for the ✓ · <b>~Name</b> = extra, logged but no ✓ · <b>-Name</b> = harm, subtracts points</div>
+ <label>Score<select id="hsm"><option value="s">I rate myself 0–10 each time</option><option value="a">Start from sub-habits done (I can adjust)</option></select></label>
+ <label class="ck" id="hxl"><input type="checkbox" id="hax"> Auto-mark past empty days as ×</label>
+ <details ${x.why||x.exp||res.length?"open":""}><summary>🎯 Objective</summary>
+  <label>Why am I doing this? Why did I start?<textarea id="hwhy">${esc(x.why||"")}</textarea></label>
+  <label>What do I expect to get from it?<textarea id="hexp">${esc(x.exp||"")}</textarea></label>
+  <label>What am I actually getting? (results log)</label><div id="hrl"></div>
+  <div class="row"><input id="hrn" placeholder="Add an observation…" style="flex:1"><button id="hra">Add</button></div></details>
  <div class="row"><button class="pri" id="hs">Save</button>${id?'<button id="ha">Archive</button><button class="dng" id="hd">Delete</button>':""}<button data-close>Cancel</button></div>
  ${id?'<div class="mu">Archive hides it from this month onward and keeps past months. Delete erases it and all its history.</div>':""}`;
- $("hm").value=mode;$("hsm").value=x.sm||"s";$("hax").checked=!!x.ax;
- const sync=()=>{const m=$("hm").value;$("htl").style.display=m==="d"?"none":"block";$("ht").max=m==="w"?7:31;$("htl").firstChild.textContent=m==="w"?"Days per week (1–7)":"Days per month (1–31)"};
- $("hm").onchange=sync;sync();
- $("hs").onclick=()=>{const nm=$("hn").value.trim();if(!nm){$("hn").focus();return}const m=$("hm").value;
-  const per=m==="m"?"m":"w",t=m==="d"?7:Math.max(1,Math.min(m==="w"?7:31,parseInt($("ht").value)||1));
-  const f={n:nm,per,t,sm:$("hsm").value,ax:$("hax").checked,items:parseItems($("hit").value)};
+ $("hm").value=mode;$("hsm").value=x.sm||"s";$("hax").checked=!!x.ax;$("hsec").value=x.sec||"d";
+ const sync=()=>{const m=$("hm").value,d=$("hsec").value==="d";$("hfq").style.display=d?"block":"none";$("hxl").style.display=d?"flex":"none";$("htl").style.display=m==="d"?"none":"block";$("ht").max=m==="w"?7:31;$("htl").firstChild.textContent=m==="w"?"Days per week (1–7)":"Days per month (1–31)"};
+ $("hm").onchange=sync;$("hsec").onchange=sync;sync();
+ const pr=()=>{$("hrl").innerHTML=res.map((r,i)=>`<div class="re"><span class="jd">${dstr(r.d)}</span><span>${esc(r.t)}</span><button data-rx="${i}">✕</button></div>`).join("")||'<div class="mu">Nothing logged yet.</div>'};
+ const addR=()=>{const t=$("hrn").value.trim();if(t){res.push({d:isoOf(new Date()),t});$("hrn").value="";pr()}};
+ $("hra").onclick=addR;$("hrl").onclick=e=>{const b=e.target.closest("[data-rx]");if(b){res.splice(+b.dataset.rx,1);pr()}};pr();
+ $("hs").onclick=()=>{const nm=$("hn").value.trim();if(!nm){$("hn").focus();return}addR();const sec=$("hsec").value,m=$("hm").value;
+  let per=x.per||"w",t=x.t||1;if(sec==="d"){per=m==="m"?"m":"w";t=m==="d"?7:Math.max(1,Math.min(m==="w"?7:31,parseInt($("ht").value)||1))}
+  const f={n:nm,sec,per,t,sm:$("hsm").value,ax:sec==="d"&&$("hax").checked,items:parseItems($("hit").value),why:$("hwhy").value.trim(),exp:$("hexp").value.trim(),res};
   if(id)Object.assign(x,f);else S.habits.push(Object.assign({id:rid(),from:V.iso[1],arch:null},f));
-  dlg.close();save()};
+  if(sec!=="d")tab=sec;dlg.close();save()};
  if(id){$("ha").onclick=()=>{x.arch=V.iso[1];dlg.close();save()};$("hd").onclick=()=>delHabit(id)}
  dlg.showModal()}
 function delHabit(id){const x=S.habits.find(q=>q.id===id);if(!x||!confirm('Delete "'+x.n+'" and all its history? This cannot be undone.'))return;
  S.habits=S.habits.filter(q=>q.id!==id);delete S.log[id];if(dlg.open)dlg.close();save()}
-function openCell(hid,d){const x=S.habits.find(q=>q.id===hid);if(!x||dlg.open)return;
- const c=getCell(hid,d)||{},items=x.items||[],has=items.length>0,auto=x.sm==="a";
+function openCell(hid,d){openCellK(hid,V.iso[d],d+" "+V.mname+" "+V.y+" · "+V.iso[d])}
+function openCellK(hid,key,label){const x=S.habits.find(q=>q.id===hid);if(!x||dlg.open)return;
+ const c=(S.log[hid]||{})[key]||{},items=x.items||[],has=items.length>0,auto=x.sm==="a";
  const cnt=items.filter(i=>i.t==="c"||i.t==="d"),gates=items.filter(i=>i.t==="g");
  let st=c.s||"",tag=c.t||"";const ck=new Set(c.k||[]),dz=Object.assign({},c.a),bd=JSON.parse(JSON.stringify(c.bd||{}));
  const CH={d:["Felt great","Easy","Good routine","Did it early","Pushed through"],x:["Tired","Busy","Sick","Forgot","Travel","Low motivation","Weather"]};
@@ -276,7 +304,7 @@ function openCell(hid,d){const x=S.habits.find(q=>q.id===hid);if(!x||dlg.open)re
  const fin=()=>Math.max(0,Math.min(10,Math.round((sv-pen())*10)/10));
  const row=(i,ix)=>i.t==="d"?`<div class="dr"><span>${esc(i.n)}</span><input type="number" min="0" step="any" inputmode="decimal" data-z="${ix}" value="${dz[i.n]!=null?dz[i.n]:""}"><span class="mu">/ ${i.rec} ${esc(i.unit)}</span></div>`
   :`<div><button class="li" data-i="${ix}">${i.t==="g"?"★ ":""}${i.t==="b"?"⚠ ":""}${esc(i.n)}${i.t==="x"?' <span class="mu">· doesn\'t count</span>':""}</button>${i.t==="b"?`<div class="bdx" data-b="${ix}"><input type="number" min="0" max="10" step="0.5" data-bp="${ix}" value="${bd[i.n]?bd[i.n].p:2}" title="Points to subtract"><input data-bw="${ix}" placeholder="− points · why do you think this happened?" value="${esc(bd[i.n]?bd[i.n].w:"")}"></div>`:""}</div>`;
- dlg.innerHTML=`<h3>${esc(x.n)}</h3><div class="mu">${d} ${V.mname} ${V.y} · ${V.iso[d]}</div>
+ dlg.innerHTML=`<h3>${esc(x.n)}</h3><div class="mu">${esc(label)}</div>
  ${has?`<div id="li">${items.map(row).join("")}</div>`:""}
  <div class="row">${has?"":'<button id="sd">✓ Done</button>'}<button id="sx">× Missed</button><button id="sc">No status</button></div>
  <div id="sw"><label>Score: <b id="sn"></b> / 10<input id="sr" type="range" min="0" max="10" step="0.1"></label><div class="scr" id="scr"></div></div>
@@ -306,7 +334,7 @@ function openCell(hid,d){const x=S.habits.find(q=>q.id===hid);if(!x||dlg.open)re
    paint()}}
  $("cs").onclick=()=>{const nn=$("cn").value.trim(),v={s:st||undefined,n:nn||undefined,t:tag||undefined},kk=[...ck];if(kk.length)v.k=kk;
   if(st==="d"){v.sv=Math.round(sv*10)/10;v.p=Math.round(fin()*10)/100;const a={};Object.keys(dz).forEach(k=>{const q=parseFloat(dz[k]);if(q>0)a[k]=q});if(Object.keys(a).length)v.a=a;if(Object.keys(bd).length)v.bd=bd}
-  setCell(hid,d,v);dlg.close();save()};
+  setK(hid,key,v);dlg.close();save()};
  paint();dlg.showModal()}
 function openDay(d){if(dlg.open)return;const q=S.dn[V.iso[d]]||{};let m=q.m||0;
  dlg.innerHTML=`<h3>Day journal</h3><div class="mu">${d} ${V.mname} ${V.y} · ${V.iso[d]}</div>
@@ -327,7 +355,8 @@ document.addEventListener("click",e=>{const t=e.target;let b;
  if(t.closest("[data-close]")){dlg.close();return}
  if(b=t.closest("[data-edit]")){openHabit(b.dataset.edit);return}
  if(b=t.closest("[data-day]")){openDay(+b.dataset.day);return}
- if(b=t.closest("[data-tq]")){quick(b.dataset.tq,todayD());return}
+ if(b=t.closest("[data-tab]")){tab=b.dataset.tab;render();return}
+ if(b=t.closest("[data-mv]")){const q=b.dataset.mv.split("|");move(q[0],+q[1]);return}
  if(b=t.closest("[data-jf]")){jf=b.dataset.jf;render();return}
  if(b=t.closest("[data-jh]")){openCell(b.dataset.jh,+b.dataset.jd);return}
  if(b=t.closest("[data-rs]")){const x=S.habits.find(q=>q.id===b.dataset.rs);if(x){x.arch=null;save()}return}
@@ -336,6 +365,13 @@ $("notes").addEventListener("input",e=>{S.mn[nk()]=e.target.value;touch()});
 $("prev").onclick=()=>{let y=vy,m=vm-1;if(m<0){m=11;y--}setView(y,m);render()};
 $("next").onclick=()=>{let y=vy,m=vm+1;if(m>11){m=0;y++}setView(y,m);render()};
 $("add").onclick=()=>openHabit(null);
+$("ro").onclick=()=>{reorder=!reorder;render()};
+const SD=$("side");let lp2=null,lp2f=false;const pbx=e=>e.target.closest("[data-ph]");
+const openP=b=>{const k=pcell(b.dataset.ph,b.dataset.pa,b.dataset.pb)[0];openCellK(b.dataset.ph,k,b.dataset.pl+" · "+dstr(b.dataset.pa)+" → "+dstr(b.dataset.pb))};
+SD.addEventListener("pointerdown",e=>{const b=pbx(e);if(!b)return;lp2f=false;clearTimeout(lp2);lp2=setTimeout(()=>{lp2f=true;openP(b)},500)});
+["pointerup","pointercancel","pointerleave"].forEach(ev=>SD.addEventListener(ev,()=>clearTimeout(lp2)));
+SD.addEventListener("contextmenu",e=>{const b=pbx(e);if(!b)return;e.preventDefault();clearTimeout(lp2);lp2f=true;openP(b)});
+SD.addEventListener("click",e=>{const b=pbx(e);if(!b)return;if(lp2f){lp2f=false;return}const x=S.habits.find(q=>q.id===b.dataset.ph);if(!x)return;if((x.items||[]).length)openP(b);else{ptap(x.id,b.dataset.pa,b.dataset.pb);save()}});
 $("calb").onclick=()=>{const mid=new Date(V.iso[Math.min(15,V.n)]+"T12:00:00");S.cal=S.cal==="j"?"g":"j";CALV=S.cal;const q=curYM(mid);setView(q[0],q[1]);save()};
 $("exp").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:"application/json"}));a.download="habit-backup-"+new Date().toISOString().slice(0,10)+".json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
 $("imp").onclick=()=>$("file").click();

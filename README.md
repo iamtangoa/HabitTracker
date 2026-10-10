@@ -1,4 +1,4 @@
-# Habit Tracker v4 (offline PWA + cloud sync)
+# Habit Tracker v5 (offline PWA + cloud sync)
 
 ## Upload to GitHub (IMPORTANT: keep everything in the repo ROOT, no sub-folders)
 index.html, manifest.json, sw.js, firebase-config.js, icon-192.png, icon-512.png, icon-maskable.png, README.md
@@ -22,4 +22,4 @@ Delete the old `icons/` folder if it exists. Pages: Settings > Pages > main / ro
 5. Re-upload firebase-config.js, then open the app > "☁ Sync" > sign in.
 
 Data is stored on-device first (works fully offline) and syncs when online. If two devices change data while apart, they are merged.
-When you change any file later, bump `V` in sw.js (e.g. habit-tracker-v5).
+When you change any file later, bump `V` in sw.js (e.g. habit-tracker-v6).
