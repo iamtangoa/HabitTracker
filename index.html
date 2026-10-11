@@ -80,32 +80,34 @@ input[type=checkbox]{width:auto;margin-right:6px}label.ck{display:flex;align-ite
 .nm{display:flex;gap:4px;align-items:center}.mv{display:inline-flex;flex:none}.mv button{padding:0 5px;font-size:10px;line-height:18px}
 details summary{cursor:pointer;margin-top:10px;font-weight:600}.re{display:flex;gap:6px;align-items:flex-start;font-size:12px;margin:4px 0}.re button{padding:0 6px;margin-left:auto}.dd.fri{color:var(--bad)}
 .cb.on.part{background:linear-gradient(to top,var(--c) var(--pp),transparent var(--pp))}.cb.on.part::before{content:"✓";color:var(--tx);font:800 12px/16px sans-serif;margin-left:-3px}
-.sc{position:absolute;top:-1px;right:1px;font:700 7px/1 sans-serif;color:var(--tx);pointer-events:none}.cb.x .sc{color:var(--bad)}
-.yd .sc{top:0;font-size:6.5px}.yd.x .sc{color:var(--bad)}
+.sc{position:absolute;bottom:0;right:1px;font:700 7px/1 sans-serif;color:var(--tx);pointer-events:none}.cb.x .sc{color:var(--bad)}
+.yd .sc{display:none;bottom:0;font-size:6px}@media(min-width:700px){.yd .sc{display:block}}.yd.x .sc{color:var(--bad)}
 #li{display:grid;gap:6px;margin:10px 0}.li{text-align:left;padding:10px 12px}.li::before{content:"○ ";color:var(--mu)}.li.act::before{content:"● ";color:var(--good)}
 .scr{font-weight:700;margin-top:8px}
 
-#yv{width:100%;max-width:1100px;height:100dvh;max-height:100dvh;border:0;border-radius:0;padding:max(12px,env(safe-area-inset-top)) 12px 24px;background:var(--bg)}
-#yv::backdrop{background:var(--bg)}
-.yh{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:26px 8px 26px 8px;padding:14px 16px;margin-bottom:12px;background:radial-gradient(circle at 0 0,#2f7bff33,transparent 50%),radial-gradient(circle at 100% 100%,#ff2e8a33,transparent 50%),var(--card)}
-.yn{display:flex;align-items:center;gap:8px}
-.yy{font-size:clamp(44px,13vw,86px);font-weight:800;line-height:1;background:linear-gradient(90deg,#2f7bff,#ff2e8a);-webkit-background-clip:text;background-clip:text;color:transparent}
-.yht{font-size:18px;font-weight:700}.ys{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-.yc{border:1px solid var(--line);border-radius:12px;padding:4px 10px;text-align:center;background:var(--bg)}.yc b{display:block;font-size:16px}.yc span{font-size:10px;color:var(--mu)}
-.ybar{display:flex;gap:6px;flex-wrap:wrap}
-.yg{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}@media(min-width:760px){.yg{grid-template-columns:repeat(3,1fr);gap:14px}}
-.ym{border:1px solid var(--line);border-radius:22px 8px 22px 8px;padding:10px;background:radial-gradient(circle at 100% 0,var(--tn),transparent 60%),var(--card)}
-.yt{display:flex;justify-content:space-between;align-items:baseline;gap:6px;margin-bottom:6px}.yt b{font-size:16px}.yt span{font-size:9px;color:var(--mu)}
-.ymg{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
-.ymg i{display:block;text-align:center;font-style:normal;font-size:9px;color:var(--mu)}
-.yd{aspect-ratio:1;min-width:0;padding:0;border:1.5px solid transparent;border-radius:6px;background:transparent;font-size:clamp(9px,2.6vw,12px);position:relative;opacity:.85}
+#yv{width:100vw;max-width:1500px;height:100dvh;max-height:100dvh;margin:0 auto;border:0;border-radius:0;overflow:hidden;padding:max(8px,env(safe-area-inset-top)) 8px max(8px,env(safe-area-inset-bottom));background:var(--bg)}
+#yv[open]{display:flex;flex-direction:column;gap:6px}#yv::backdrop{background:var(--bg)}
+.yh{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;border:1px solid var(--line);border-radius:18px 6px 18px 6px;padding:6px 10px;background:radial-gradient(circle at 0 0,#2f7bff33,transparent 50%),radial-gradient(circle at 100% 100%,#ff2e8a33,transparent 50%),var(--card)}
+.yn{display:flex;align-items:center;gap:4px}.yn button,.ybar button{padding:2px 9px}
+.yy{font-size:clamp(22px,5vw,38px);font-weight:800;line-height:1;background:linear-gradient(90deg,#2f7bff,#ff2e8a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.yht{flex:1;min-width:0;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ybar{display:flex;gap:4px}.ys{display:flex;gap:5px;width:100%;order:3}
+.yc{flex:1;border:1px solid var(--line);border-radius:10px;padding:1px 4px;text-align:center;background:var(--bg)}.yc b{display:block;font-size:13px;line-height:1.2}.yc span{font-size:8px;color:var(--mu)}
+@media(min-width:900px){.ys{width:auto;order:0;flex:0 1 460px}}
+.yg{flex:1;min-height:0;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,minmax(0,1fr));gap:5px}
+@media(min-aspect-ratio:11/10){.yg{grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(3,minmax(0,1fr))}}
+.ym{display:flex;flex-direction:column;min-height:0;overflow:hidden;border:1px solid var(--line);border-radius:14px 5px 14px 5px;padding:4px 5px;background:radial-gradient(circle at 100% 0,var(--tn),transparent 60%),var(--card)}
+.yt{display:flex;justify-content:space-between;align-items:baseline;gap:4px;line-height:1.2}.yt b{font-size:clamp(11px,min(2.6vw,2vh),16px)}.yt span{display:none;font-size:9px;color:var(--mu);white-space:nowrap}@media(min-width:700px){.yt span{display:block}}
+.ymg{flex:1;min-height:0;display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:auto repeat(6,minmax(0,1fr));gap:2px;font-size:clamp(7px,min(1.9vw,1.5vh),13px)}
+.ymg i{display:block;text-align:center;font-style:normal;font-size:.7em;color:var(--mu)}
+.yd{min-width:0;min-height:0;padding:0;border:1.5px solid transparent;border-radius:4px;background:transparent;font-size:1em;line-height:1;position:relative;opacity:.85}
 .yd:hover{border-color:var(--c)}.yd.fri{color:var(--bad)}
-.yd.on{background:var(--c);color:#070914;font-weight:800;opacity:1;box-shadow:0 0 8px var(--c)}
+.yd.on{background:var(--c);color:#070914;font-weight:800;opacity:1;box-shadow:0 0 6px var(--c)}
 .yd.on.part{background:linear-gradient(to top,var(--c) var(--pp),transparent var(--pp));border-color:var(--c);color:var(--tx);box-shadow:none}
 .yd.x{border-color:var(--bad);color:var(--bad);background:#ff547022;opacity:1}.yd.x.auto{opacity:.4}
-.yd.fut{opacity:.35}.yd.out{opacity:.22}.yd.today{outline:2px solid var(--tx);outline-offset:1px}
-.yd.has::after{content:"";position:absolute;bottom:1px;right:1px;width:5px;height:5px;border-radius:50%;background:var(--tx);border:1px solid var(--bg)}
-.yf{font-size:10px;color:var(--mu);margin-top:6px;min-height:13px}
+.yd.fut{opacity:.35}.yd.out{opacity:.22}.yd.today{outline:2px solid var(--tx);outline-offset:0}
+.yd.has::after{content:"";position:absolute;top:1px;right:1px;width:4px;height:4px;border-radius:50%;background:var(--tx)}
+.yf{font-size:clamp(7px,1.6vh,10px);color:var(--mu);line-height:1.2;min-height:1.2em;text-align:center}
 </style></head><body>
 <div class="top">
   <h1><img src="icon-192.png" alt="" width="22" height="22" style="border-radius:5px" onerror="this.remove()">HABIT TRACKER</h1>
@@ -398,11 +400,11 @@ function drawYear(){const x=S.habits.find(q=>q.id===yh);if(!x){yv.close();return
    cells+=`<button class="yd ${cls}" style="--c:${mc[Math.min(4,Math.floor((d-1)/7))]};${st}" title="${esc(tip)}" data-yk="${key}|${iso}">${nd(d)}${c.s==="d"&&c.p!=null&&c.p<1?`<b class="sc">${nd(fmt(c.p*10))}</b>`:""}</button>`}
   out+=`<div class="ym" style="--tn:${TINT[Math.floor(m/3)]}"><div class="yt"><b>${j?JMP[m]:b.mname}</b><span>${j?b.mname+" · "+mon(b.iso[1])+"–"+mon(b.iso[b.n]):b.y}</span></div><div class="ymg">${wd.map(w=>"<i>"+w+"</i>").join("")}${cells}</div><div class="yf">${md?"✓ "+nd(md)+" · avg "+nd(fmt(ms/md*10)):""}</div></div>`}
  const ch=(v,l)=>`<div class="yc"><b>${v}</b><span>${l}</span></div>`;
- yv.innerHTML=`<div class="yh"><div><div class="yn"><button data-yn="-1">‹</button><span class="yy">${nd(yy)}</span><button data-yn="1">›</button></div>
-  <div class="yht">${x.why?"🎯 ":""}${esc(x.n)}</div>${x.why?`<div class="mu">${esc(x.why)}</div>`:""}
-  <div class="ys">${ch(nd(T.d),"Done")}${ch(nd(T.x),"Missed")}${ch(T.d?nd(fmt(T.sum/T.d*10)):"—","Avg /10")}${ch(sec==="d"?nd(best):"—","Best chain")}${ch(nd(T.nt),"Notes")}</div></div>
-  <div class="ybar">${j?'<button data-ypd>۱۲۳ / 123</button>':""}<button data-yed>✎ Edit</button><button class="pri" data-yclose>✕ Close</button></div></div>
- <div class="yg" dir="${j?"rtl":"ltr"}">${out}</div><div class="hint">Tap any day to open its score &amp; note · dot = has a note · fill height = score · red × = missed</div>`}
+ yv.innerHTML=`<div class="yh"><div class="yn"><button data-yn="-1">‹</button><span class="yy">${nd(yy)}</span><button data-yn="1">›</button></div>
+  <div class="yht" title="${esc(x.why||"")}">${x.why?"🎯 ":""}${esc(x.n)}</div>
+  <div class="ybar">${j?'<button data-ypd title="Persian / Latin digits">۱۲۳</button>':""}<button data-yed title="Edit habit">✎</button><button class="pri" data-yclose title="Close">✕</button></div>
+  <div class="ys">${ch(nd(T.d),"Done")}${ch(nd(T.x),"Missed")}${ch(T.d?nd(fmt(T.sum/T.d*10)):"—","Avg")}${ch(sec==="d"?nd(best):"—","Chain")}${ch(nd(T.nt),"Notes")}</div></div>
+ <div class="yg" dir="${j?"rtl":"ltr"}">${out}</div>`}
 yv.addEventListener("click",e=>{const t=e.target;let b;
  if(t.closest("[data-yclose]")){yv.close();return}
  if(b=t.closest("[data-yn]")){yy+=+b.dataset.yn;drawYear();return}
