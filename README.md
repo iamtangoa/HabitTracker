@@ -14,7 +14,8 @@ self-rated **x/10** scores, sub-habits, notes for every day, objectives, and opt
 | Tick a habit | **Tap** its box |
 | Give it a score, a note, or mark it missed | **Hold** the box (or **right-click** on Windows) |
 | Write about the whole day | Tap the **day number**, or the **Day journal** row |
-| Edit / reorder / archive / delete a habit | Tap the **habit name** (reorder: **↕ Order**) |
+| See a habit's **full-year calendar** | Tap the **habit name** (✎ Edit is inside it) |
+| Edit / reorder / archive / delete a habit | Tap the **Target chip** (reorder: **↕ Order**) |
 | Add a weekly / monthly / yearly habit | **+ Habit** → choose **Section** |
 | Switch Jalali ⇄ Gregorian | **📅** button |
 | Back up or move my data | **⬇** download, **⬆** restore, or **☁ Sync** |
@@ -33,7 +34,7 @@ self-rated **x/10** scores, sub-habits, notes for every day, objectives, and opt
 **Install on Windows:** Edge/Chrome → install icon in the address bar (or ⋯ → *Apps → Install*). It then opens like a normal app and works **offline**.
 **Install on Android:** Chrome ⋯ → *Install app / Add to Home screen*.
 
-**After uploading a new version:** open the site and press **Ctrl + Shift + R**. If an installed app still looks old, close it fully and reopen (the new version loads on the second open). Whenever you change any file, bump the number in `sw.js` (`const V="habit-tracker-v6"` → `v7`) so devices refresh.
+**After uploading a new version:** open the site and press **Ctrl + Shift + R**. If an installed app still looks old, close it fully and reopen (the new version loads on the second open). Whenever you change any file, bump the number in `sw.js` (`const V="habit-tracker-v7"` → `v8`) so devices refresh.
 
 **Icon not updating?** Uninstall the app and install it again (browsers cache the icon).
 
@@ -262,3 +263,11 @@ Offline-first: the app always saves on the device first. If two devices were cha
 | `firebase-config.js` | Your sync settings (optional) |
 
 Data lives in your browser's storage (key `habit-v3`) on this device; nothing is sent anywhere unless you sign in to sync, in which case one private document per account is stored in your own Firebase project.
+
+---
+
+## 16. 🗓 Full-year calendar (per habit)
+
+Tap any **habit name** → all 12 months of the year in one poster-style layout (Jalali: Farvardin top-right, Persian digits; switch digits with **۱۲۳ / 123**). Each day shows what you logged: **filled = done** (colour = week block), **partial fill = score**, **red = missed**, **dot = note**, outline = today. Header chips: Done · Missed · Avg /10 · Best chain · Notes. ‹ › change year. Tap a day to edit its score/note. **✎ Edit** opens the habit editor; the **Target chip** still opens it from the grid. Weekly/Monthly/Yearly habits paint their whole period.
+
+**Score on the box (v8):** a ✓ with less than 10/10 shows its score as a tiny number in the corner (e.g. 7.5) and a bucket fill that is always at least slightly visible (even 1/10 still shows ✓). **Strict habits:** in *Edit habit → Strict habit* enter a score (e.g. 5): any ✓ scored below it is shown as a red **×** with its score. The day is still saved and counted; only the look changes.

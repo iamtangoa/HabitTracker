@@ -79,16 +79,40 @@ input[type=checkbox]{width:auto;margin-right:6px}label.ck{display:flex;align-ite
 .pr{display:grid;grid-template-columns:repeat(auto-fill,minmax(36px,1fr));gap:6px}.pb{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:var(--mu)}
 .nm{display:flex;gap:4px;align-items:center}.mv{display:inline-flex;flex:none}.mv button{padding:0 5px;font-size:10px;line-height:18px}
 details summary{cursor:pointer;margin-top:10px;font-weight:600}.re{display:flex;gap:6px;align-items:flex-start;font-size:12px;margin:4px 0}.re button{padding:0 6px;margin-left:auto}.dd.fri{color:var(--bad)}
-.cb.on.part{background:linear-gradient(to top,var(--c) var(--pp),transparent var(--pp))}.cb.on.part::before{content:""}
+.cb.on.part{background:linear-gradient(to top,var(--c) var(--pp),transparent var(--pp))}.cb.on.part::before{content:"✓";color:var(--tx);font:800 12px/16px sans-serif;margin-left:-3px}
+.sc{position:absolute;top:-1px;right:1px;font:700 7px/1 sans-serif;color:var(--tx);pointer-events:none}.cb.x .sc{color:var(--bad)}
+.yd .sc{top:0;font-size:6.5px}.yd.x .sc{color:var(--bad)}
 #li{display:grid;gap:6px;margin:10px 0}.li{text-align:left;padding:10px 12px}.li::before{content:"○ ";color:var(--mu)}.li.act::before{content:"● ";color:var(--good)}
 .scr{font-weight:700;margin-top:8px}
+
+#yv{width:100%;max-width:1100px;height:100dvh;max-height:100dvh;border:0;border-radius:0;padding:max(12px,env(safe-area-inset-top)) 12px 24px;background:var(--bg)}
+#yv::backdrop{background:var(--bg)}
+.yh{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:26px 8px 26px 8px;padding:14px 16px;margin-bottom:12px;background:radial-gradient(circle at 0 0,#2f7bff33,transparent 50%),radial-gradient(circle at 100% 100%,#ff2e8a33,transparent 50%),var(--card)}
+.yn{display:flex;align-items:center;gap:8px}
+.yy{font-size:clamp(44px,13vw,86px);font-weight:800;line-height:1;background:linear-gradient(90deg,#2f7bff,#ff2e8a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.yht{font-size:18px;font-weight:700}.ys{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.yc{border:1px solid var(--line);border-radius:12px;padding:4px 10px;text-align:center;background:var(--bg)}.yc b{display:block;font-size:16px}.yc span{font-size:10px;color:var(--mu)}
+.ybar{display:flex;gap:6px;flex-wrap:wrap}
+.yg{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}@media(min-width:760px){.yg{grid-template-columns:repeat(3,1fr);gap:14px}}
+.ym{border:1px solid var(--line);border-radius:22px 8px 22px 8px;padding:10px;background:radial-gradient(circle at 100% 0,var(--tn),transparent 60%),var(--card)}
+.yt{display:flex;justify-content:space-between;align-items:baseline;gap:6px;margin-bottom:6px}.yt b{font-size:16px}.yt span{font-size:9px;color:var(--mu)}
+.ymg{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.ymg i{display:block;text-align:center;font-style:normal;font-size:9px;color:var(--mu)}
+.yd{aspect-ratio:1;min-width:0;padding:0;border:1.5px solid transparent;border-radius:6px;background:transparent;font-size:clamp(9px,2.6vw,12px);position:relative;opacity:.85}
+.yd:hover{border-color:var(--c)}.yd.fri{color:var(--bad)}
+.yd.on{background:var(--c);color:#070914;font-weight:800;opacity:1;box-shadow:0 0 8px var(--c)}
+.yd.on.part{background:linear-gradient(to top,var(--c) var(--pp),transparent var(--pp));border-color:var(--c);color:var(--tx);box-shadow:none}
+.yd.x{border-color:var(--bad);color:var(--bad);background:#ff547022;opacity:1}.yd.x.auto{opacity:.4}
+.yd.fut{opacity:.35}.yd.out{opacity:.22}.yd.today{outline:2px solid var(--tx);outline-offset:1px}
+.yd.has::after{content:"";position:absolute;bottom:1px;right:1px;width:5px;height:5px;border-radius:50%;background:var(--tx);border:1px solid var(--bg)}
+.yf{font-size:10px;color:var(--mu);margin-top:6px;min-height:13px}
 </style></head><body>
 <div class="top">
   <h1><img src="icon-192.png" alt="" width="22" height="22" style="border-radius:5px" onerror="this.remove()">HABIT TRACKER</h1>
   <div class="nav"><button id="prev">‹</button><span class="mo" id="mo"></span><button id="next">›</button><button id="add">+ Habit</button><button id="ro" title="Reorder habits">↕ Order</button><button id="calb" title="Switch calendar">📅</button><button id="sync">☁ Sync</button><button id="exp" title="Download backup file">⬇</button><button id="imp" title="Restore from backup file">⬆</button><input type="file" id="file" accept="application/json" hidden></div>
 </div>
 <div class="card scroll"><table id="t"></table></div>
-<div class="hint">Tap a box = ✓ &nbsp;·&nbsp; Hold (or right-click) = note / mark missed × &nbsp;·&nbsp; Tap a day number or the bottom row = day journal &nbsp;·&nbsp; Tap a habit name = edit / objective / archive / delete</div>
+<div class="hint">Tap a box = ✓ &nbsp;·&nbsp; Hold (or right-click) = note / mark missed × &nbsp;·&nbsp; Tap a day number or the bottom row = day journal &nbsp;·&nbsp; Tap a habit name = its full-year calendar (✎ Edit inside) &nbsp;·&nbsp; Tap the Target chip = edit / objective / archive / delete</div>
 <br>
 <div class="grid">
   <div class="card"><h2>Weekly progress</h2><div class="rings" id="rings"></div></div>
@@ -100,6 +124,7 @@ details summary{cursor:pointer;margin-top:10px;font-weight:600}.re{display:flex;
   <div class="card" id="arch" hidden><h2>Archived habits</h2><div id="al"></div></div>
 </div>
 <dialog id="dlg"></dialog>
+<dialog id="yv"></dialog>
 <script src="firebase-config.js"></script>
 <script>
 const $=id=>document.getElementById(id);
@@ -195,6 +220,9 @@ function streak(h,n){if(h.per==="m")return"";const T0=todayD(),td=T0||n;
  const st=stats(h,n).wks;let w=Math.floor((td-1)/7),s=0;if(T0&&st[w].c<st[w].t)w--;
  for(;w>=0&&st[w].c>=st[w].t;w--)s++;return s+"w"}
 const ring=(p,c,l)=>`<div><div class="ring" style="background:conic-gradient(${c} ${p}%,var(--line) 0)"><b>${p}%</b></div><div class="rl">${l}</div></div>`;
+const bk=p=>p>0?Math.round((.15+.85*p)*100):0;
+const strictX=(x,c)=>x.xb!=null&&x.xb!==""&&c.s==="d"&&c.p!=null&&c.p*10<x.xb;
+const scTag=c=>c.s==="d"&&c.p!=null&&c.p<1?`<b class="sc">${fmt(c.p*10)}</b>`:"";
 let jf="all";
 function render(){
  if(CALV!==S.cal)reView();
@@ -208,9 +236,9 @@ function render(){
  if(!H.length)h+=`<tr><td class="name dn" colspan="${n+4}">No habits this month — tap “+ Habit”.</td></tr>`;
  H.forEach(x=>{const s=stats(x,n),st=streak(x,n),num=parseInt(st),fire=st.endsWith("d")?num>=3:st.endsWith("w")?num>=2:false;
   const tl=(x.per==="m"?x.t+"×/mo":x.t===7?"Daily":x.t+"×/wk")+((x.items||[]).length?" ☰":"");
-  h+=`<tr><td class="name"><div class="nm">${reorder?mvb(x.id):""}<button class="hn" data-edit="${x.id}" title="${esc(x.why||"")}">${x.why?"🎯 ":""}${esc(x.n)}</button></div></td>`;
-  for(let d=1;d<=n;d++){const c=getCell(x.id,d)||{},pt=c.s==="d"&&c.p!=null&&c.p<1;let cls=c.s==="d"?"on":c.s==="x"?"x":"";if(!cls&&x.ax&&V.iso[d]<ti)cls="x auto";
-   h+=`<td><button class="cb ${cls} ${pt?"part":""} ${c.n||c.t||c.bd||(c.k&&c.k.length&&!c.s)?"has":""} ${d===T?"today":""}" style="--c:${COL[Math.min(4,Math.floor((d-1)/7))]};--pp:${pt?Math.round(c.p*100):0}%" title="${esc(cellLabel(x,c))}" data-h="${x.id}" data-d="${d}" aria-label="${esc(x.n)} day ${d}"></button></td>`}
+  h+=`<tr><td class="name"><div class="nm">${reorder?mvb(x.id):""}<button class="hn" data-yr="${x.id}" title="${esc(x.why||"")}">${x.why?"🎯 ":""}${esc(x.n)}</button></div></td>`;
+  for(let d=1;d<=n;d++){const c=getCell(x.id,d)||{},sx=strictX(x,c),pt=!sx&&c.s==="d"&&c.p!=null&&c.p<1;let cls=sx?"x":c.s==="d"?"on":c.s==="x"?"x":"";if(!cls&&x.ax&&V.iso[d]<ti)cls="x auto";
+   h+=`<td><button class="cb ${cls} ${pt?"part":""} ${c.n||c.t||c.bd||(c.k&&c.k.length&&!c.s)?"has":""} ${d===T?"today":""}" style="--c:${COL[Math.min(4,Math.floor((d-1)/7))]};--pp:${pt?bk(c.p):0}%" title="${esc(cellLabel(x,c))}" data-h="${x.id}" data-d="${d}" aria-label="${esc(x.n)} day ${d}">${scTag(c)}</button></td>`}
   h+=`<td><button class="tgb" data-edit="${x.id}">${tl}</button></td><td class="cnt">${fmt(s.raw)}/${s.goal}</td><td class="st ${fire?"fire":""}">${fire?"🔥":""}${st||"—"}</td></tr>`});
  h+='<tr><td class="name dn">Day journal</td>';
  for(let d=1;d<=n;d++){const dn=S.dn[V.iso[d]];h+=`<td><button class="dm" data-day="${d}">${dn?(dn.m?MOODS[dn.m-1]:"📝"):"·"}</button></td>`}
@@ -239,10 +267,10 @@ function render(){
  const nt=$("notes");if(document.activeElement!==nt)nt.value=S.mn[nk()]||"";
  const AR=S.habits.filter(x=>x.arch!=null&&V.iso[1]>=x.arch);$("arch").hidden=!AR.length;
  $("al").innerHTML=AR.map(x=>`<div class="tr"><b style="flex:1">${esc(x.n)}</b><button data-rs="${x.id}">Restore</button><button class="dng" data-del="${x.id}">Delete</button></div>`).join("");
- renderSide(T);setStat();
+ renderSide(T);setStat();if(yv.open)drawYear();
 }
-function pbox(x,rs,re,lab,col,cur){const[,c0]=pcell(x.id,rs,re),c=c0||{},pt=c.s==="d"&&c.p!=null&&c.p<1;
- return `<div class="pb"><button class="cb ${c.s==="d"?"on":c.s==="x"?"x":""} ${pt?"part":""} ${c.n||c.t||c.bd?"has":""} ${cur?"today":""}" style="--c:${col};--pp:${pt?Math.round(c.p*100):0}%" title="${esc(cellLabel(x,c))}" data-ph="${x.id}" data-pa="${rs}" data-pb="${re}" data-pl="${esc(lab)}"></button><span>${esc(lab)}</span></div>`}
+function pbox(x,rs,re,lab,col,cur){const[,c0]=pcell(x.id,rs,re),c=c0||{},sx=strictX(x,c),pt=!sx&&c.s==="d"&&c.p!=null&&c.p<1;
+ return `<div class="pb"><button class="cb ${sx?"x":c.s==="d"?"on":c.s==="x"?"x":""} ${pt?"part":""} ${c.n||c.t||c.bd?"has":""} ${cur?"today":""}" style="--c:${col};--pp:${pt?bk(c.p):0}%" title="${esc(cellLabel(x,c))}" data-ph="${x.id}" data-pa="${rs}" data-pb="${re}" data-pl="${esc(lab)}">${scTag(c)}</button><span>${esc(lab)}</span></div>`}
 function renderSide(T){const H=act().filter(h=>h.sec===tab),n=V.n;
  $("tabs").innerHTML=Object.keys(SN).map(k=>`<button class="${tab===k?"act":""}" data-tab="${k}">${SN[k]}</button>`).join("");
  let o="",R=[];
@@ -250,10 +278,10 @@ function renderSide(T){const H=act().filter(h=>h.sec===tab),n=V.n;
  if(tab==="y")for(let y=vy-3;y<=vy;y++){const a=build(y,0),b=build(y,11);R.push([a.iso[1],b.iso[b.n],String(y),"#ffb020",y===vy])}
  if(tab==="w")for(let w=0;w*7<n;w++){const a=w*7+1,b=Math.min(a+6,n);R.push([V.iso[a],V.iso[b],"W"+(w+1),COL[w],T>=a&&T<=b])}
  H.forEach(x=>{const bx=R.map(r=>pbox(x,r[0],r[1],r[2],r[3],r[4])).join(""),dn=(bx.match(/class="cb on/g)||[]).length;
-  o+=`<div class="sh"><div class="sht">${reorder?mvb(x.id):""}<button class="hn" data-edit="${x.id}" title="${esc(x.why||"")}">${x.why?"🎯 ":""}${esc(x.n)}</button><span class="mu">${dn}/${R.length}</span></div><div class="pr">${bx}</div></div>`});
+  o+=`<div class="sh"><div class="sht">${reorder?mvb(x.id):""}<button class="hn" data-yr="${x.id}" title="${esc(x.why||"")}">${x.why?"🎯 ":""}${esc(x.n)}</button><span class="mu">${dn}/${R.length}</span></div><div class="pr">${bx}</div></div>`});
  $("sbody").innerHTML=o||`<div class="mu">No ${SN[tab].toLowerCase()} habits yet. Tap “+ Habit” and choose ${SN[tab]} as its section.</div>`}
 /* ---------- dialogs ---------- */
-const dlg=$("dlg");
+const dlg=$("dlg"),yv=$("yv");
 function openHabit(id){if(dlg.open)return;const x=id?S.habits.find(q=>q.id===id):{n:"",sec:"d",per:"w",t:5,sm:"s",ax:false,items:[]};if(!x)return;
  const mode=x.per==="m"?"m":x.t===7?"d":"w";let res=(x.res||[]).slice();
  dlg.innerHTML=`<h3>${id?"Edit habit":"New habit"}</h3>
@@ -264,6 +292,7 @@ function openHabit(id){if(dlg.open)return;const x=id?S.habits.find(q=>q.id===id)
  <label>Sub-habits (optional), one per line<textarea id="hit" placeholder="Gym&#10;Running&#10;Swimming">${esc((x.items||[]).map(itemLine).join("\n"))}</textarea></label>
  <div class="mu">Plain line = counts toward the ✓ · <b>Vitamin D3: 4000 IU</b> = dose (score = taken ÷ target) · <b>*Name</b> = required for the ✓ · <b>~Name</b> = extra, logged but no ✓ · <b>-Name</b> = harm, subtracts points</div>
  <label>Score<select id="hsm"><option value="s">I rate myself 0–10 each time</option><option value="a">Start from sub-habits done (I can adjust)</option></select></label>
+ <label>Strict habit: show × when score is below (optional, /10)<input id="hxb" type="number" min="0" max="10" step="0.1" placeholder="empty = any score shows ✓" value="${x.xb==null?"":x.xb}"></label>
  <label class="ck" id="hxl"><input type="checkbox" id="hax"> Auto-mark past empty days as ×</label>
  <details ${x.why||x.exp||res.length?"open":""}><summary>🎯 Objective</summary>
   <label>Why am I doing this? Why did I start?<textarea id="hwhy">${esc(x.why||"")}</textarea></label>
@@ -280,7 +309,7 @@ function openHabit(id){if(dlg.open)return;const x=id?S.habits.find(q=>q.id===id)
  $("hra").onclick=addR;$("hrl").onclick=e=>{const b=e.target.closest("[data-rx]");if(b){res.splice(+b.dataset.rx,1);pr()}};pr();
  $("hs").onclick=()=>{const nm=$("hn").value.trim();if(!nm){$("hn").focus();return}addR();const sec=$("hsec").value,m=$("hm").value;
   let per=x.per||"w",t=x.t||1;if(sec==="d"){per=m==="m"?"m":"w";t=m==="d"?7:Math.max(1,Math.min(m==="w"?7:31,parseInt($("ht").value)||1))}
-  const f={n:nm,sec,per,t,sm:$("hsm").value,ax:sec==="d"&&$("hax").checked,items:parseItems($("hit").value),why:$("hwhy").value.trim(),exp:$("hexp").value.trim(),res};
+  const f={n:nm,sec,per,t,sm:$("hsm").value,ax:sec==="d"&&$("hax").checked,xb:$("hxb").value===""?null:Math.max(0,Math.min(10,parseFloat($("hxb").value)||0)),items:parseItems($("hit").value),why:$("hwhy").value.trim(),exp:$("hexp").value.trim(),res};
   if(id)Object.assign(x,f);else S.habits.push(Object.assign({id:rid(),from:V.iso[1],arch:null},f));
   if(sec!=="d")tab=sec;dlg.close();save()};
  if(id){$("ha").onclick=()=>{x.arch=V.iso[1];dlg.close();save()};$("hd").onclick=()=>delHabit(id)}
@@ -343,6 +372,43 @@ function openDay(d){if(dlg.open)return;const q=S.dn[V.iso[d]]||{};let m=q.m||0;
  $("md").onclick=e=>{const b=e.target.closest("[data-m]");if(b){m=m===+b.dataset.m?0:+b.dataset.m;paint()}};
  $("ds").onclick=()=>{const k=V.iso[d],nn=$("dnt").value.trim();if(!m&&!nn)delete S.dn[k];else S.dn[k]={m,n:nn};dlg.close();save()};
  paint();dlg.showModal()}
+/* ---------- full-year calendar per habit ---------- */
+const JMP=["فروردین","اردیبهشت","خرداد","تیر","مرداد","شهریور","مهر","آبان","آذر","دی","بهمن","اسفند"],TINT=["#37e05a22","#ffb02022","#ff2e8a22","#2f7bff22"];
+let yh=null,yy=0,pdig=(()=>{try{return localStorage.getItem("habit-pd")!=="0"}catch(e){return true}})();
+const nd=v=>{v=String(v);return S.cal==="j"&&pdig?v.replace(/\d/g,c=>"۰۱۲۳۴۵۶۷۸۹"[c]):v};
+function openYear(id){if(dlg.open||yv.open||!S.habits.find(q=>q.id===id))return;yh=id;yy=vy;drawYear();yv.showModal()}
+function drawYear(){const x=S.habits.find(q=>q.id===yh);if(!x){yv.close();return}
+ const j=S.cal==="j",ti=isoOf(new Date()),L=S.log[x.id]||{},sec=x.sec||"d",from=x.from||"",ar=x.arch,inR=i=>i>=from&&(ar==null||i<ar);
+ const yA=build(yy,0).iso[1],eB=build(yy,11),yZ=eB.iso[eB.n],mon=i=>new Date(i+"T12:00:00").toLocaleString("en",{month:"short"});
+ const T={d:0,x:0,sum:0,nt:0};let best=0,run=0,out="";
+ for(const k in L)if(k>=yA&&k<=yZ){const c=L[k];if(c.s==="d"){T.d++;T.sum+=c.p==null?1:c.p}if(c.s==="x")T.x++;if(c.n)T.nt++}
+ const mc=["#2f7bff","#37e05a","#ff2e8a","#ffb020","#b6e03a"],wd=j?["ش",...WDJ.slice(0,6)]:WDG;
+ for(let m=0;m<12;m++){const b=build(yy,m);let md=0,ms=0,cells="";
+  for(const k in L)if(k>=b.iso[1]&&k<=b.iso[b.n]&&L[k].s==="d"){md++;ms+=L[k].p==null?1:L[k].p}
+  const off=j?(b.dow[1]+1)%7:b.dow[1];for(let i=0;i<off;i++)cells+="<i></i>";
+  for(let d=1;d<=b.n;d++){const iso=b.iso[d];let key=iso,c=L[iso];
+   if(sec!=="d"){let a,z;if(sec==="w"){const s0=Math.floor((d-1)/7)*7+1;a=b.iso[s0];z=b.iso[Math.min(s0+6,b.n)]}else if(sec==="m"){a=b.iso[1];z=b.iso[b.n]}else{a=yA;z=yZ}const r=pcell(x.id,a,z);key=r[0];c=r[1]}
+   c=c||{};let cls="",st="";
+   if(c.s==="d"){const p=c.p==null?1:c.p;if(strictX(x,c))cls="x strict";else{cls="on";if(p<1){cls+=" part";st="--pp:"+bk(p)+"%;"}}}
+   else if(c.s==="x")cls="x";else if(x.ax&&sec==="d"&&iso<ti&&inR(iso))cls="x auto";
+   if(sec==="d"){if(c.s==="d"){run++;best=Math.max(best,run)}else run=0}
+   if(iso>ti)cls+=" fut";if(!inR(iso)&&!c.s)cls+=" out";if(iso===ti)cls+=" today";if(j&&b.dow[d]===5)cls+=" fri";
+   if((sec==="d"||key===iso)&&(c.n||c.t||c.bd))cls+=" has";
+   const tip=[dstr(iso),c.s==="d"?sc10(c.p==null?1:c.p):c.s==="x"?"× missed":"",c.t||"",c.n||""].filter(Boolean).join(" · ");
+   cells+=`<button class="yd ${cls}" style="--c:${mc[Math.min(4,Math.floor((d-1)/7))]};${st}" title="${esc(tip)}" data-yk="${key}|${iso}">${nd(d)}${c.s==="d"&&c.p!=null&&c.p<1?`<b class="sc">${nd(fmt(c.p*10))}</b>`:""}</button>`}
+  out+=`<div class="ym" style="--tn:${TINT[Math.floor(m/3)]}"><div class="yt"><b>${j?JMP[m]:b.mname}</b><span>${j?b.mname+" · "+mon(b.iso[1])+"–"+mon(b.iso[b.n]):b.y}</span></div><div class="ymg">${wd.map(w=>"<i>"+w+"</i>").join("")}${cells}</div><div class="yf">${md?"✓ "+nd(md)+" · avg "+nd(fmt(ms/md*10)):""}</div></div>`}
+ const ch=(v,l)=>`<div class="yc"><b>${v}</b><span>${l}</span></div>`;
+ yv.innerHTML=`<div class="yh"><div><div class="yn"><button data-yn="-1">‹</button><span class="yy">${nd(yy)}</span><button data-yn="1">›</button></div>
+  <div class="yht">${x.why?"🎯 ":""}${esc(x.n)}</div>${x.why?`<div class="mu">${esc(x.why)}</div>`:""}
+  <div class="ys">${ch(nd(T.d),"Done")}${ch(nd(T.x),"Missed")}${ch(T.d?nd(fmt(T.sum/T.d*10)):"—","Avg /10")}${ch(sec==="d"?nd(best):"—","Best chain")}${ch(nd(T.nt),"Notes")}</div></div>
+  <div class="ybar">${j?'<button data-ypd>۱۲۳ / 123</button>':""}<button data-yed>✎ Edit</button><button class="pri" data-yclose>✕ Close</button></div></div>
+ <div class="yg" dir="${j?"rtl":"ltr"}">${out}</div><div class="hint">Tap any day to open its score &amp; note · dot = has a note · fill height = score · red × = missed</div>`}
+yv.addEventListener("click",e=>{const t=e.target;let b;
+ if(t.closest("[data-yclose]")){yv.close();return}
+ if(b=t.closest("[data-yn]")){yy+=+b.dataset.yn;drawYear();return}
+ if(t.closest("[data-ypd]")){pdig=!pdig;try{localStorage.setItem("habit-pd",pdig?"1":"0")}catch(_){}drawYear();return}
+ if(t.closest("[data-yed]")){const id=yh;yv.close();openHabit(id);return}
+ if(b=t.closest("[data-yk]")){const q=b.dataset.yk.split("|");openCellK(yh,q[0],dstr(q[1]))}});
 /* ---------- events ---------- */
 const TB=$("t");let lp=null,lpFired=false;
 TB.addEventListener("pointerdown",e=>{const b=e.target.closest(".cb");if(!b)return;lpFired=false;clearTimeout(lp);lp=setTimeout(()=>{lpFired=true;openCell(b.dataset.h,+b.dataset.d)},500)});
@@ -351,6 +417,7 @@ TB.addEventListener("contextmenu",e=>{const b=e.target.closest(".cb");if(!b)retu
 TB.addEventListener("click",e=>{const b=e.target.closest(".cb");if(!b)return;if(lpFired){lpFired=false;return}quick(b.dataset.h,+b.dataset.d)});
 document.addEventListener("click",e=>{const t=e.target;let b;
  if(t.closest("[data-close]")){dlg.close();return}
+ if(b=t.closest("[data-yr]")){openYear(b.dataset.yr);return}
  if(b=t.closest("[data-edit]")){openHabit(b.dataset.edit);return}
  if(b=t.closest("[data-day]")){openDay(+b.dataset.day);return}
  if(b=t.closest("[data-tab]")){tab=b.dataset.tab;render();return}
