@@ -114,14 +114,20 @@ details summary{cursor:pointer;margin-top:10px;font-weight:600}.re{display:flex;
 .yg.mini{flex:none;grid-template-columns:repeat(3,1fr);grid-template-rows:none}.yg.mini .ymg{flex:none;grid-template-rows:none;grid-auto-rows:auto;font-size:clamp(8px,2.2vw,12px)}.yg.mini .yd{aspect-ratio:1}
 @media(min-width:700px){.yg.mini{grid-template-columns:repeat(4,1fr)}}@media(min-width:1100px){.yg.mini{grid-template-columns:repeat(6,1fr)}}
 .cb.on .sc,.yd.on .sc{color:#070914}.je.act{color:var(--tx);font-weight:700}#pwc label{display:block;margin-top:8px;font-size:13px}#pwc textarea{min-height:64px}
+.htb{position:sticky;top:0;z-index:20;display:flex;gap:6px;overflow-x:auto;padding:8px 2px;margin:0 -2px;background:var(--bg);scrollbar-width:none}.htb::-webkit-scrollbar{display:none}
+.ht{flex:none;border-radius:999px;padding:5px 12px;white-space:nowrap}.ht i{font-style:normal;font-size:10px;margin-left:6px;padding:1px 6px;border-radius:9px;background:var(--line);color:var(--mu)}
+.ht.act{background:linear-gradient(90deg,#2f7bff,#ff2e8a);color:#fff;border-color:transparent;box-shadow:0 0 12px #2f7bff66}.ht.act i{background:#0004;color:#fff}
+.yd .dn{position:absolute;top:0;left:1px;font-size:.5em;font-style:normal;font-weight:600;opacity:.75;line-height:1}.yd .mk{font-size:1.25em;font-weight:800;line-height:1}
+.yg.mini{grid-template-columns:repeat(3,1fr)}@media(min-width:700px){.yg.mini{grid-template-columns:repeat(4,1fr)}}@media(min-width:1100px){.yg.mini{grid-template-columns:repeat(4,1fr)}}
 </style></head><body>
 <div class="top">
   <h1><img src="icon-192.png" alt="" width="22" height="22" style="border-radius:5px" onerror="this.remove()">HABIT TRACKER</h1>
   <div class="nav"><button id="prev">‹</button><span class="mo" id="mo"></span><button id="next">›</button><button id="add">+ Habit</button><button id="ro" title="Reorder habits">↕ Order</button><button id="calb" title="Switch calendar">📅</button><button id="sync">☁ Sync</button><button id="exp" title="Download backup file">⬇</button><button id="imp" title="Restore from backup file">⬆</button><input type="file" id="file" accept="application/json" hidden></div>
 </div>
+<div class="htb" id="htabs"></div>
 <div class="yb2"><button id="yp">‹</button><b id="yl"></b><button id="yn2">›</button><button id="jt">📝 Today's journal</button></div>
 <div id="ycards"></div>
-<div class="hint">Every habit has its own full-year calendar · Tap any day = ✓ Done + your score (0–10) + note, or × Missed · <b>+ Today</b> logs today · Tap a habit name = full screen · Tap the Target chip = edit / objective / archive / delete</div>
+<div class="hint">Pick a habit in the top bar (or swipe the calendar left/right) to switch calendars · Tap any day = ✓ Done + your score (0–10) + note, or × Missed · <b>+ Today</b> logs today · Tap a habit name = full screen · Tap the Target chip = edit / objective / archive / delete</div>
 <br>
 <div class="grid">
   <div class="card"><h2>Weekly progress</h2><div class="rings" id="rings"></div></div>
@@ -233,15 +239,19 @@ const ring=(p,c,l)=>`<div><div class="ring" style="background:conic-gradient(${c
 const bk=p=>p>0?Math.round((.15+.85*p)*100):0;
 const strictX=(x,c)=>x.xb!=null&&x.xb!==""&&c.s==="d"&&c.p!=null&&c.p*10<x.xb;
 const scTag=c=>c.s==="d"&&c.p!=null?`<b class="sc">${fmt(c.p*10)}</b>`:"";
-let jf="all";
+let jf="all",sel=(()=>{try{return localStorage.getItem("habit-sel")}catch(e){return null}})();
 function render(){
  if(CALV!==S.cal)reView();
  const n=V.n,H=act().filter(h=>(h.sec||"d")==="d"),ti=isoOf(new Date()),T=todayD(),cur=T>0,wl=d=>(S.cal==="j"?WDJ:WDG)[V.dow[d]];
  $("mo").textContent=V.mname+" "+V.y;$("calb").textContent="📅 "+(S.cal==="j"?"Jalali":"Gregorian");$("ro").textContent=reorder?"✓ Done":"↕ Order";
- $("yl").textContent=nd(vy);let cards="";
- H.forEach(x=>{const Y=ycal(x,vy),tl=(x.per==="m"?x.t+"×/mo":x.t===7?"Daily":x.t+"×/wk")+((x.items||[]).length?" ☰":"");
-  cards+=`<div class="hc"><div class="hch">${reorder?mvb(x.id):""}<button class="hn" data-yr="${x.id}" title="${esc(x.why||"")}">${x.why?"🎯 ":""}${esc(x.n)}</button><button class="tgb" data-edit="${x.id}">${tl}</button><span class="hcs"><b>${nd(Y.T.d)}</b> days done in ${nd(vy)}${Y.T.d?" · avg "+nd(fmt(Y.T.sum/Y.T.d*10)):""} · best chain ${nd(Y.best)}</span><button data-yt="${x.id}">+ Today</button></div><div class="yg mini" dir="${S.cal==="j"?"rtl":"ltr"}">${Y.out}</div></div>`});
- $("ycards").innerHTML=cards||'<div class="mu">No daily habits yet — tap “+ Habit”.</div>';
+ $("yl").textContent=nd(vy);const AL=act(),y0=build(vy,0).iso[1],yb=build(vy,11),y1=yb.iso[yb.n];
+ if(!AL.find(q=>q.id===sel))sel=(AL.find(q=>(q.sec||"d")==="d")||AL[0]||{}).id;
+ $("htabs").innerHTML=AL.map(q=>{const L=S.log[q.id]||{};let n=0;for(const k in L)if(k>=y0&&k<=y1&&L[k].s==="d")n++;return `<button class="ht ${q.id===sel?"act":""}" data-sel="${q.id}">${esc(q.n)}<i>${nd(n)}</i></button>`}).join("");
+ const x=AL.find(q=>q.id===sel);let cards="";
+ if(x){const Y=ycal(x,vy),sc=x.sec||"d",tl=sc!=="d"?SN[sc]:(x.per==="m"?x.t+"×/mo":x.t===7?"Daily":x.t+"×/wk")+((x.items||[]).length?" ☰":"");
+  cards=`<div class="hc"><div class="hch">${reorder?mvb(x.id):""}<button class="hn" data-yr="${x.id}" title="${esc(x.why||"")}">${x.why?"🎯 ":""}${esc(x.n)}</button><button class="tgb" data-edit="${x.id}">${tl}</button><span class="hcs"><b>${nd(Y.T.d)}</b> ✓ days in ${nd(vy)}${Y.T.d?" · avg "+nd(fmt(Y.T.sum/Y.T.d*10)):""}${sc==="d"?" · best chain "+nd(Y.best):""}</span>${sc==="d"?`<button data-yt="${x.id}">+ Today</button>`:""}</div><div class="yg mini" dir="${S.cal==="j"?"rtl":"ltr"}">${Y.out}</div></div>`}
+ $("ycards").innerHTML=cards||'<div class="mu">No habits yet — tap “+ Habit”.</div>';
+ const ta=$("htabs").querySelector(".act");if(ta&&ta.scrollIntoView)ta.scrollIntoView({inline:"center",block:"nearest"});
  let bars="",cap=0,goal=0,pts=0,days=0;
  H.forEach(x=>{const s=stats(x,n);cap+=s.cap;goal+=s.goal;pts+=s.raw;days+=s.days;bars+=`<div class="bar"><span>${esc(x.n)}</span><i><u style="width:${s.pct}%"></u></i><span>${s.pct}%</span></div>`});
  $("bars").innerHTML=bars||'<div class="mu">—</div>';
@@ -392,7 +402,7 @@ function ycal(x,yy){ const j=S.cal==="j",ti=isoOf(new Date()),L=S.log[x.id]||{},
    if(iso>ti)cls+=" fut";if(!inR(iso)&&!c.s)cls+=" out";if(iso===ti)cls+=" today";if(j&&b.dow[d]===5)cls+=" fri";
    if((sec==="d"||key===iso)&&(c.n||c.t||c.bd))cls+=" has";
    const tip=[dstr(iso),c.s==="d"?sc10(c.p==null?1:c.p):c.s==="x"?"× missed":"",c.t||"",c.n||""].filter(Boolean).join(" · ");
-   cells+=`<button class="yd ${cls}" style="--c:${mc[Math.min(4,Math.floor((d-1)/7))]};${st}" title="${esc(tip)}" data-yk="${key}|${iso}" data-yh="${x.id}">${nd(d)}${c.s==="d"&&c.p!=null?`<b class="sc">${nd(fmt(c.p*10))}</b>`:""}</button>`}
+   cells+=`<button class="yd ${cls}" style="--c:${mc[Math.min(4,Math.floor((d-1)/7))]};${st}" title="${esc(tip)}" data-yk="${key}|${iso}" data-yh="${x.id}">${/^(on|x)( |$)/.test(cls)?`<em class="dn">${nd(d)}</em><span class="mk">${cls[0]==="o"?"✓":"×"}</span>`:nd(d)}${c.s==="d"&&c.p!=null?`<b class="sc">${nd(fmt(c.p*10))}</b>`:""}</button>`}
   out+=`<div class="ym" style="--tn:${TINT[Math.floor(m/3)]}"><div class="yt"><b>${j?JMP[m]:b.mname}</b><span>${j?b.mname+" · "+mon(b.iso[1])+"–"+mon(b.iso[b.n]):b.y}</span></div><div class="ymg">${wd.map(w=>"<i>"+w+"</i>").join("")}${cells}</div><div class="yf">${md?"✓ "+nd(md)+" · avg "+nd(fmt(ms/md*10)):""}</div></div>`}
  return{out,T,best,sec}}
 function drawYear(){const x=S.habits.find(q=>q.id===yh);if(!x){yv.close();return}
@@ -411,6 +421,8 @@ yv.addEventListener("click",e=>{const t=e.target;let b;
 /* ---------- events ---------- */
 document.addEventListener("click",e=>{const t=e.target;let b;
  if(t.closest("[data-close]")){dlg.close();return}
+
+ if(b=t.closest("[data-sel]")){sel=b.dataset.sel;try{localStorage.setItem("habit-sel",sel)}catch(_){}render();return}
  if(b=t.closest("[data-yk]")){const q=b.dataset.yk.split("|");openCellK(b.dataset.yh||yh,q[0],dstr(q[1]));return}
  if(b=t.closest("[data-yt]")){const k=isoOf(new Date());openCellK(b.dataset.yt,k,dstr(k));return}
  if(b=t.closest("[data-pwo]")){const v=+b.dataset.pwo;pwo=v?pwo+v:0;drawPW();return}
@@ -429,6 +441,10 @@ $("prev").onclick=()=>{let y=vy,m=vm-1;if(m<0){m=11;y--}setView(y,m);render()};
 $("next").onclick=()=>{let y=vy,m=vm+1;if(m>11){m=0;y++}setView(y,m);render()};
 $("yp").onclick=()=>{setView(vy-1,vm);render()};$("yn2").onclick=()=>{setView(vy+1,vm);render()};
 $("jt").onclick=()=>{reView();render();const t=todayD();if(t)openDay(t)};
+let tx=null;const yc=$("ycards");
+yc.addEventListener("touchstart",e=>{tx=e.touches[0].clientX},{passive:true});
+yc.addEventListener("touchend",e=>{if(tx==null)return;const dx=e.changedTouches[0].clientX-tx;tx=null;if(Math.abs(dx)<70)return;
+ const AL=act(),i=AL.findIndex(q=>q.id===sel),j=i+(dx<0?1:-1);if(j<0||j>=AL.length)return;sel=AL[j].id;try{localStorage.setItem("habit-sel",sel)}catch(_){}render()});
 let pwo=0;const pwc=$("pwc");
 const wkS=dt=>{const d=new Date(dt);d.setHours(12,0,0,0);const w=d.getDay();d.setDate(d.getDate()-(S.cal==="j"?(w+1)%7:(w+6)%7));return d};
 const pwKey=()=>{const d=wkS(new Date());d.setDate(d.getDate()+7*pwo);return d};

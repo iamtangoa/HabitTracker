@@ -279,3 +279,8 @@ Tap any **habit name** → all 12 months of the year in one poster-style layout 
 - The checklist grid is gone. Every habit is a card with **its own full-year calendar** (✓ = coloured day, **score number** in the corner, red = missed/strict ×, dot = note). Tap any day to log ✓ + score (0–10) + note; **+ Today** logs today. ‹ › above the cards change the year.
 - The fill “bucket” is removed; only the score number remains.
 - **Problem of the week** card: the problem, solution, what I can do now, what I have done already — one entry per week (Saturday-start in Jalali), with a list of past weeks. It syncs with the rest of your data.
+
+## 18. v11 — habit tabs + ✓ on the calendar
+
+- Habits are listed as pills in a sticky top bar (the badge = ✓ days this year). Tap one to switch calendars, or swipe the calendar left/right on a phone. Your last choice is remembered.
+- Done days show a big **✓** (with the day number tiny in the corner and the score bottom-right); missed days show **×**.
