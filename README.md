@@ -273,3 +273,9 @@ Tap any **habit name** → all 12 months of the year in one poster-style layout 
 **Score on the box (v8):** a ✓ with less than 10/10 shows its score as a tiny number in the corner (e.g. 7.5) and a bucket fill that is always at least slightly visible (even 1/10 still shows ✓). **Strict habits:** in *Edit habit → Strict habit* enter a score (e.g. 5): any ✓ scored below it is shown as a red **×** with its score. The day is still saved and counted; only the look changes.
 
 **One-glance year (v9):** the full-year calendar fits the screen with no scrolling (3×4 months on a phone, 4×3 on a wide screen). Score numbers show inside the day boxes on wider screens; on phones the bucket fill shows the score and hover/tap shows the number.
+
+## 17. v10 — year calendars on the main page + Problem of the week
+
+- The checklist grid is gone. Every habit is a card with **its own full-year calendar** (✓ = coloured day, **score number** in the corner, red = missed/strict ×, dot = note). Tap any day to log ✓ + score (0–10) + note; **+ Today** logs today. ‹ › above the cards change the year.
+- The fill “bucket” is removed; only the score number remains.
+- **Problem of the week** card: the problem, solution, what I can do now, what I have done already — one entry per week (Saturday-start in Jalali), with a list of past weeks. It syncs with the rest of your data.

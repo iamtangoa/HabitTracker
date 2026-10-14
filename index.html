@@ -81,7 +81,7 @@ input[type=checkbox]{width:auto;margin-right:6px}label.ck{display:flex;align-ite
 details summary{cursor:pointer;margin-top:10px;font-weight:600}.re{display:flex;gap:6px;align-items:flex-start;font-size:12px;margin:4px 0}.re button{padding:0 6px;margin-left:auto}.dd.fri{color:var(--bad)}
 .cb.on.part{background:linear-gradient(to top,var(--c) var(--pp),transparent var(--pp))}.cb.on.part::before{content:"✓";color:var(--tx);font:800 12px/16px sans-serif;margin-left:-3px}
 .sc{position:absolute;bottom:0;right:1px;font:700 7px/1 sans-serif;color:var(--tx);pointer-events:none}.cb.x .sc{color:var(--bad)}
-.yd .sc{display:none;bottom:0;font-size:6px}@media(min-width:700px){.yd .sc{display:block}}.yd.x .sc{color:var(--bad)}
+.yd .sc{bottom:0;right:0;font-size:.58em;line-height:1}.yd.x .sc{color:var(--bad)}
 #li{display:grid;gap:6px;margin:10px 0}.li{text-align:left;padding:10px 12px}.li::before{content:"○ ";color:var(--mu)}.li.act::before{content:"● ";color:var(--good)}
 .scr{font-weight:700;margin-top:8px}
 
@@ -108,18 +108,26 @@ details summary{cursor:pointer;margin-top:10px;font-weight:600}.re{display:flex;
 .yd.fut{opacity:.35}.yd.out{opacity:.22}.yd.today{outline:2px solid var(--tx);outline-offset:0}
 .yd.has::after{content:"";position:absolute;top:1px;right:1px;width:4px;height:4px;border-radius:50%;background:var(--tx)}
 .yf{font-size:clamp(7px,1.6vh,10px);color:var(--mu);line-height:1.2;min-height:1.2em;text-align:center}
+.yb2{display:flex;gap:8px;align-items:center;margin:6px 0 8px}.yb2 b{font-size:24px;background:linear-gradient(90deg,#2f7bff,#ff2e8a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hc{border:1px solid var(--line);border-radius:18px 6px 18px 6px;background:var(--card);padding:8px 10px;margin-bottom:10px}
+.hch{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-bottom:6px}.hcs{flex:1;color:var(--mu);font-size:12px;min-width:140px}.hcs b{color:var(--tx);font-size:14px}
+.yg.mini{flex:none;grid-template-columns:repeat(3,1fr);grid-template-rows:none}.yg.mini .ymg{flex:none;grid-template-rows:none;grid-auto-rows:auto;font-size:clamp(8px,2.2vw,12px)}.yg.mini .yd{aspect-ratio:1}
+@media(min-width:700px){.yg.mini{grid-template-columns:repeat(4,1fr)}}@media(min-width:1100px){.yg.mini{grid-template-columns:repeat(6,1fr)}}
+.cb.on .sc,.yd.on .sc{color:#070914}.je.act{color:var(--tx);font-weight:700}#pwc label{display:block;margin-top:8px;font-size:13px}#pwc textarea{min-height:64px}
 </style></head><body>
 <div class="top">
   <h1><img src="icon-192.png" alt="" width="22" height="22" style="border-radius:5px" onerror="this.remove()">HABIT TRACKER</h1>
   <div class="nav"><button id="prev">‹</button><span class="mo" id="mo"></span><button id="next">›</button><button id="add">+ Habit</button><button id="ro" title="Reorder habits">↕ Order</button><button id="calb" title="Switch calendar">📅</button><button id="sync">☁ Sync</button><button id="exp" title="Download backup file">⬇</button><button id="imp" title="Restore from backup file">⬆</button><input type="file" id="file" accept="application/json" hidden></div>
 </div>
-<div class="card scroll"><table id="t"></table></div>
-<div class="hint">Tap a box = ✓ &nbsp;·&nbsp; Hold (or right-click) = note / mark missed × &nbsp;·&nbsp; Tap a day number or the bottom row = day journal &nbsp;·&nbsp; Tap a habit name = its full-year calendar (✎ Edit inside) &nbsp;·&nbsp; Tap the Target chip = edit / objective / archive / delete</div>
+<div class="yb2"><button id="yp">‹</button><b id="yl"></b><button id="yn2">›</button><button id="jt">📝 Today's journal</button></div>
+<div id="ycards"></div>
+<div class="hint">Every habit has its own full-year calendar · Tap any day = ✓ Done + your score (0–10) + note, or × Missed · <b>+ Today</b> logs today · Tap a habit name = full screen · Tap the Target chip = edit / objective / archive / delete</div>
 <br>
 <div class="grid">
   <div class="card"><h2>Weekly progress</h2><div class="rings" id="rings"></div></div>
   <div class="card"><h2>Progress by habit</h2><div id="bars"></div></div>
   <div class="card"><h2>Overall</h2><div class="rings"><div><div class="ring" id="all"><b></b></div><div class="rl" id="allt"></div></div></div><div class="mu" id="q" style="text-align:center;margin-top:8px"></div></div>
+  <div class="card wide" id="pwc"></div>
   <div class="card side" id="side"><div class="tabs" id="tabs"></div><div id="sbody"></div></div>
   <div class="card wide"><h2>Why log</h2><div class="row" id="jf"></div><div class="mu" id="why"></div><div id="jl"></div></div>
   <div class="card"><h2>Month notes</h2><textarea id="notes" placeholder="Reminders, wins, lessons this month…"></textarea></div>
@@ -153,7 +161,7 @@ const PRE=[
 ["Learn + Practice + Action","w",5,"a",0,"Trade: learn\nTrade: practice (simulated)\nTrade: real action"],
 ["Read Books","w",5,"s",0,"5 min at least\n25 minutes"]];
 const mkPre=()=>PRE.map((p,i)=>({id:"p"+i,n:p[0],per:p[1],t:p[2],sm:p[3],ax:!!p[4],items:parseItems(p[5]),from:"",arch:null}));
-const fresh=()=>({v:3,cal:"j",habits:mkPre(),log:{},dn:{},mn:{},updated:0,synced:0});
+const fresh=()=>({v:3,cal:"j",habits:mkPre(),log:{},dn:{},mn:{},pw:{},updated:0,synced:0});
 function migrate(o){const n={v:2,habits:(o.habits||[]).map((x,i)=>({id:"h"+i,n:x.n,per:"m",t:x.g||20,kind:"c",from:0,arch:null})),log:{},dn:{},mn:o.notes||{}};
  for(const k in o.log||{}){n.log[k]={};for(const i in o.log[k]){const m={};for(const d in o.log[k][i])if(o.log[k][i][d])m[d]={s:"d"};n.log[k]["h"+i]=m}}return n}
 function up(s){s=s||{};if(!s.v||s.v<2)s=migrate(s);
@@ -169,7 +177,7 @@ function up(s){s=s||{};if(!s.v||s.v<2)s=migrate(s);
    return o});
   if(dflt){hs.forEach(h=>h.arch="2000-01-01");hs.push(...mkPre())}
   s={v:3,cal:"j",habits:hs,log:lg,dn,mn,updated:s.updated||0,synced:s.synced||0}}
- s.cal=s.cal||"j";s.habits=s.habits||[];s.log=s.log||{};s.dn=s.dn||{};s.mn=s.mn||{};s.updated=s.updated||0;s.synced=s.synced||0;return s}
+ s.cal=s.cal||"j";s.habits=s.habits||[];s.log=s.log||{};s.dn=s.dn||{};s.mn=s.mn||{};s.pw=s.pw||{};s.updated=s.updated||0;s.synced=s.synced||0;return s}
 const norm=up;
 let S,migrated=false;
 try{let r=localStorage.getItem("habit-v3");if(r)S=up(JSON.parse(r));else{r=localStorage.getItem("habit-v2")||localStorage.getItem("habit-v1");if(r){S=up(JSON.parse(r));migrated=true}else S=fresh()}}catch(e){S=fresh()}
@@ -224,28 +232,16 @@ function streak(h,n){if(h.per==="m")return"";const T0=todayD(),td=T0||n;
 const ring=(p,c,l)=>`<div><div class="ring" style="background:conic-gradient(${c} ${p}%,var(--line) 0)"><b>${p}%</b></div><div class="rl">${l}</div></div>`;
 const bk=p=>p>0?Math.round((.15+.85*p)*100):0;
 const strictX=(x,c)=>x.xb!=null&&x.xb!==""&&c.s==="d"&&c.p!=null&&c.p*10<x.xb;
-const scTag=c=>c.s==="d"&&c.p!=null&&c.p<1?`<b class="sc">${fmt(c.p*10)}</b>`:"";
+const scTag=c=>c.s==="d"&&c.p!=null?`<b class="sc">${fmt(c.p*10)}</b>`:"";
 let jf="all";
 function render(){
  if(CALV!==S.cal)reView();
  const n=V.n,H=act().filter(h=>(h.sec||"d")==="d"),ti=isoOf(new Date()),T=todayD(),cur=T>0,wl=d=>(S.cal==="j"?WDJ:WDG)[V.dow[d]];
  $("mo").textContent=V.mname+" "+V.y;$("calb").textContent="📅 "+(S.cal==="j"?"Jalali":"Gregorian");$("ro").textContent=reorder?"✓ Done":"↕ Order";
- let h='<tr><th class="name dn">Habits</th>';
- for(let w=0;w*7<n;w++){const a=w*7+1,b=Math.min(a+6,n);h+=`<th class="wk" colspan="${b-a+1}" style="background:${COL[w]}33;color:${COL[w]}">${WK[w]}</th>`}
- h+='<th class="dn">Target</th><th class="dn">Done</th><th class="dn">Streak</th></tr><tr><th class="name"></th>';
- for(let d=1;d<=n;d++)h+=`<th><button class="dd ${d===T?"td":""} ${S.cal==="j"&&V.dow[d]===5?"fri":""}" data-day="${d}">${wl(d)}<br>${d}</button></th>`;
- h+="<th></th><th></th><th></th></tr>";
- if(!H.length)h+=`<tr><td class="name dn" colspan="${n+4}">No habits this month — tap “+ Habit”.</td></tr>`;
- H.forEach(x=>{const s=stats(x,n),st=streak(x,n),num=parseInt(st),fire=st.endsWith("d")?num>=3:st.endsWith("w")?num>=2:false;
-  const tl=(x.per==="m"?x.t+"×/mo":x.t===7?"Daily":x.t+"×/wk")+((x.items||[]).length?" ☰":"");
-  h+=`<tr><td class="name"><div class="nm">${reorder?mvb(x.id):""}<button class="hn" data-yr="${x.id}" title="${esc(x.why||"")}">${x.why?"🎯 ":""}${esc(x.n)}</button></div></td>`;
-  for(let d=1;d<=n;d++){const c=getCell(x.id,d)||{},sx=strictX(x,c),pt=!sx&&c.s==="d"&&c.p!=null&&c.p<1;let cls=sx?"x":c.s==="d"?"on":c.s==="x"?"x":"";if(!cls&&x.ax&&V.iso[d]<ti)cls="x auto";
-   h+=`<td><button class="cb ${cls} ${pt?"part":""} ${c.n||c.t||c.bd||(c.k&&c.k.length&&!c.s)?"has":""} ${d===T?"today":""}" style="--c:${COL[Math.min(4,Math.floor((d-1)/7))]};--pp:${pt?bk(c.p):0}%" title="${esc(cellLabel(x,c))}" data-h="${x.id}" data-d="${d}" aria-label="${esc(x.n)} day ${d}">${scTag(c)}</button></td>`}
-  h+=`<td><button class="tgb" data-edit="${x.id}">${tl}</button></td><td class="cnt">${fmt(s.raw)}/${s.goal}</td><td class="st ${fire?"fire":""}">${fire?"🔥":""}${st||"—"}</td></tr>`});
- h+='<tr><td class="name dn">Day journal</td>';
- for(let d=1;d<=n;d++){const dn=S.dn[V.iso[d]];h+=`<td><button class="dm" data-day="${d}">${dn?(dn.m?MOODS[dn.m-1]:"📝"):"·"}</button></td>`}
- h+="<td></td><td></td><td></td></tr>";
- $("t").innerHTML=h;
+ $("yl").textContent=nd(vy);let cards="";
+ H.forEach(x=>{const Y=ycal(x,vy),tl=(x.per==="m"?x.t+"×/mo":x.t===7?"Daily":x.t+"×/wk")+((x.items||[]).length?" ☰":"");
+  cards+=`<div class="hc"><div class="hch">${reorder?mvb(x.id):""}<button class="hn" data-yr="${x.id}" title="${esc(x.why||"")}">${x.why?"🎯 ":""}${esc(x.n)}</button><button class="tgb" data-edit="${x.id}">${tl}</button><span class="hcs"><b>${nd(Y.T.d)}</b> days done in ${nd(vy)}${Y.T.d?" · avg "+nd(fmt(Y.T.sum/Y.T.d*10)):""} · best chain ${nd(Y.best)}</span><button data-yt="${x.id}">+ Today</button></div><div class="yg mini" dir="${S.cal==="j"?"rtl":"ltr"}">${Y.out}</div></div>`});
+ $("ycards").innerHTML=cards||'<div class="mu">No daily habits yet — tap “+ Habit”.</div>';
  let bars="",cap=0,goal=0,pts=0,days=0;
  H.forEach(x=>{const s=stats(x,n);cap+=s.cap;goal+=s.goal;pts+=s.raw;days+=s.days;bars+=`<div class="bar"><span>${esc(x.n)}</span><i><u style="width:${s.pct}%"></u></i><span>${s.pct}%</span></div>`});
  $("bars").innerHTML=bars||'<div class="mu">—</div>';
@@ -269,9 +265,9 @@ function render(){
  const nt=$("notes");if(document.activeElement!==nt)nt.value=S.mn[nk()]||"";
  const AR=S.habits.filter(x=>x.arch!=null&&V.iso[1]>=x.arch);$("arch").hidden=!AR.length;
  $("al").innerHTML=AR.map(x=>`<div class="tr"><b style="flex:1">${esc(x.n)}</b><button data-rs="${x.id}">Restore</button><button class="dng" data-del="${x.id}">Delete</button></div>`).join("");
- renderSide(T);setStat();if(yv.open)drawYear();
+ renderSide(T);setStat();if(yv.open)drawYear();if(!$("pwc").contains(document.activeElement))drawPW();
 }
-function pbox(x,rs,re,lab,col,cur){const[,c0]=pcell(x.id,rs,re),c=c0||{},sx=strictX(x,c),pt=!sx&&c.s==="d"&&c.p!=null&&c.p<1;
+function pbox(x,rs,re,lab,col,cur){const[,c0]=pcell(x.id,rs,re),c=c0||{},sx=strictX(x,c),pt=false;
  return `<div class="pb"><button class="cb ${sx?"x":c.s==="d"?"on":c.s==="x"?"x":""} ${pt?"part":""} ${c.n||c.t||c.bd?"has":""} ${cur?"today":""}" style="--c:${col};--pp:${pt?bk(c.p):0}%" title="${esc(cellLabel(x,c))}" data-ph="${x.id}" data-pa="${rs}" data-pb="${re}" data-pl="${esc(lab)}">${scTag(c)}</button><span>${esc(lab)}</span></div>`}
 function renderSide(T){const H=act().filter(h=>h.sec===tab),n=V.n;
  $("tabs").innerHTML=Object.keys(SN).map(k=>`<button class="${tab===k?"act":""}" data-tab="${k}">${SN[k]}</button>`).join("");
@@ -322,7 +318,7 @@ function openCell(hid,d){openCellK(hid,V.iso[d],d+" "+V.mname+" "+V.y+" · "+V.i
 function openCellK(hid,key,label){const x=S.habits.find(q=>q.id===hid);if(!x||dlg.open)return;
  const c=(S.log[hid]||{})[key]||{},items=x.items||[],has=items.length>0,auto=x.sm==="a";
  const cnt=items.filter(i=>i.t==="c"||i.t==="d"),gates=items.filter(i=>i.t==="g");
- let st=c.s||"",tag=c.t||"";const ck=new Set(c.k||[]),dz=Object.assign({},c.a),bd=JSON.parse(JSON.stringify(c.bd||{}));
+ let st=c.s||(!has&&!Object.keys(c).length&&key<=isoOf(new Date())?"d":""),tag=c.t||"";const ck=new Set(c.k||[]),dz=Object.assign({},c.a),bd=JSON.parse(JSON.stringify(c.bd||{}));
  const CH={d:["Felt great","Easy","Good routine","Did it early","Pushed through"],x:["Tired","Busy","Sick","Forgot","Travel","Low motivation","Weather"]};
  const num=k=>parseFloat(dz[k])||0;
  const share=()=>cnt.length?cnt.reduce((a,i)=>a+(i.t==="c"?(ck.has(i.n)?1:0):Math.min(1,num(i.n)/(i.rec||1))),0)/cnt.length:gates.length?(gates.some(g=>ck.has(g.n))?1:0):1;
@@ -379,8 +375,7 @@ const JMP=["فروردین","اردیبهشت","خرداد","تیر","مرداد
 let yh=null,yy=0,pdig=(()=>{try{return localStorage.getItem("habit-pd")!=="0"}catch(e){return true}})();
 const nd=v=>{v=String(v);return S.cal==="j"&&pdig?v.replace(/\d/g,c=>"۰۱۲۳۴۵۶۷۸۹"[c]):v};
 function openYear(id){if(dlg.open||yv.open||!S.habits.find(q=>q.id===id))return;yh=id;yy=vy;drawYear();yv.showModal()}
-function drawYear(){const x=S.habits.find(q=>q.id===yh);if(!x){yv.close();return}
- const j=S.cal==="j",ti=isoOf(new Date()),L=S.log[x.id]||{},sec=x.sec||"d",from=x.from||"",ar=x.arch,inR=i=>i>=from&&(ar==null||i<ar);
+function ycal(x,yy){ const j=S.cal==="j",ti=isoOf(new Date()),L=S.log[x.id]||{},sec=x.sec||"d",from=x.from||"",ar=x.arch,inR=i=>i>=from&&(ar==null||i<ar);
  const yA=build(yy,0).iso[1],eB=build(yy,11),yZ=eB.iso[eB.n],mon=i=>new Date(i+"T12:00:00").toLocaleString("en",{month:"short"});
  const T={d:0,x:0,sum:0,nt:0};let best=0,run=0,out="";
  for(const k in L)if(k>=yA&&k<=yZ){const c=L[k];if(c.s==="d"){T.d++;T.sum+=c.p==null?1:c.p}if(c.s==="x")T.x++;if(c.n)T.nt++}
@@ -391,14 +386,17 @@ function drawYear(){const x=S.habits.find(q=>q.id===yh);if(!x){yv.close();return
   for(let d=1;d<=b.n;d++){const iso=b.iso[d];let key=iso,c=L[iso];
    if(sec!=="d"){let a,z;if(sec==="w"){const s0=Math.floor((d-1)/7)*7+1;a=b.iso[s0];z=b.iso[Math.min(s0+6,b.n)]}else if(sec==="m"){a=b.iso[1];z=b.iso[b.n]}else{a=yA;z=yZ}const r=pcell(x.id,a,z);key=r[0];c=r[1]}
    c=c||{};let cls="",st="";
-   if(c.s==="d"){const p=c.p==null?1:c.p;if(strictX(x,c))cls="x strict";else{cls="on";if(p<1){cls+=" part";st="--pp:"+bk(p)+"%;"}}}
+   if(c.s==="d"){const p=c.p==null?1:c.p;if(strictX(x,c))cls="x strict";else cls="on";}
    else if(c.s==="x")cls="x";else if(x.ax&&sec==="d"&&iso<ti&&inR(iso))cls="x auto";
    if(sec==="d"){if(c.s==="d"){run++;best=Math.max(best,run)}else run=0}
    if(iso>ti)cls+=" fut";if(!inR(iso)&&!c.s)cls+=" out";if(iso===ti)cls+=" today";if(j&&b.dow[d]===5)cls+=" fri";
    if((sec==="d"||key===iso)&&(c.n||c.t||c.bd))cls+=" has";
    const tip=[dstr(iso),c.s==="d"?sc10(c.p==null?1:c.p):c.s==="x"?"× missed":"",c.t||"",c.n||""].filter(Boolean).join(" · ");
-   cells+=`<button class="yd ${cls}" style="--c:${mc[Math.min(4,Math.floor((d-1)/7))]};${st}" title="${esc(tip)}" data-yk="${key}|${iso}">${nd(d)}${c.s==="d"&&c.p!=null&&c.p<1?`<b class="sc">${nd(fmt(c.p*10))}</b>`:""}</button>`}
+   cells+=`<button class="yd ${cls}" style="--c:${mc[Math.min(4,Math.floor((d-1)/7))]};${st}" title="${esc(tip)}" data-yk="${key}|${iso}" data-yh="${x.id}">${nd(d)}${c.s==="d"&&c.p!=null?`<b class="sc">${nd(fmt(c.p*10))}</b>`:""}</button>`}
   out+=`<div class="ym" style="--tn:${TINT[Math.floor(m/3)]}"><div class="yt"><b>${j?JMP[m]:b.mname}</b><span>${j?b.mname+" · "+mon(b.iso[1])+"–"+mon(b.iso[b.n]):b.y}</span></div><div class="ymg">${wd.map(w=>"<i>"+w+"</i>").join("")}${cells}</div><div class="yf">${md?"✓ "+nd(md)+" · avg "+nd(fmt(ms/md*10)):""}</div></div>`}
+ return{out,T,best,sec}}
+function drawYear(){const x=S.habits.find(q=>q.id===yh);if(!x){yv.close();return}
+ const j=S.cal==="j",Y=ycal(x,yy),out=Y.out,T=Y.T,best=Y.best,sec=Y.sec;
  const ch=(v,l)=>`<div class="yc"><b>${v}</b><span>${l}</span></div>`;
  yv.innerHTML=`<div class="yh"><div class="yn"><button data-yn="-1">‹</button><span class="yy">${nd(yy)}</span><button data-yn="1">›</button></div>
   <div class="yht" title="${esc(x.why||"")}">${x.why?"🎯 ":""}${esc(x.n)}</div>
@@ -409,16 +407,14 @@ yv.addEventListener("click",e=>{const t=e.target;let b;
  if(t.closest("[data-yclose]")){yv.close();return}
  if(b=t.closest("[data-yn]")){yy+=+b.dataset.yn;drawYear();return}
  if(t.closest("[data-ypd]")){pdig=!pdig;try{localStorage.setItem("habit-pd",pdig?"1":"0")}catch(_){}drawYear();return}
- if(t.closest("[data-yed]")){const id=yh;yv.close();openHabit(id);return}
- if(b=t.closest("[data-yk]")){const q=b.dataset.yk.split("|");openCellK(yh,q[0],dstr(q[1]))}});
+ if(t.closest("[data-yed]")){const id=yh;yv.close();openHabit(id);return}});
 /* ---------- events ---------- */
-const TB=$("t");let lp=null,lpFired=false;
-TB.addEventListener("pointerdown",e=>{const b=e.target.closest(".cb");if(!b)return;lpFired=false;clearTimeout(lp);lp=setTimeout(()=>{lpFired=true;openCell(b.dataset.h,+b.dataset.d)},500)});
-["pointerup","pointercancel","pointerleave"].forEach(ev=>TB.addEventListener(ev,()=>clearTimeout(lp)));
-TB.addEventListener("contextmenu",e=>{const b=e.target.closest(".cb");if(!b)return;e.preventDefault();clearTimeout(lp);lpFired=true;openCell(b.dataset.h,+b.dataset.d)});
-TB.addEventListener("click",e=>{const b=e.target.closest(".cb");if(!b)return;if(lpFired){lpFired=false;return}quick(b.dataset.h,+b.dataset.d)});
 document.addEventListener("click",e=>{const t=e.target;let b;
  if(t.closest("[data-close]")){dlg.close();return}
+ if(b=t.closest("[data-yk]")){const q=b.dataset.yk.split("|");openCellK(b.dataset.yh||yh,q[0],dstr(q[1]));return}
+ if(b=t.closest("[data-yt]")){const k=isoOf(new Date());openCellK(b.dataset.yt,k,dstr(k));return}
+ if(b=t.closest("[data-pwo]")){const v=+b.dataset.pwo;pwo=v?pwo+v:0;drawPW();return}
+ if(b=t.closest("[data-pww]")){pwo=Math.round((new Date(b.dataset.pww+"T12:00:00")-wkS(new Date()))/6048e5);drawPW();return}
  if(b=t.closest("[data-yr]")){openYear(b.dataset.yr);return}
  if(b=t.closest("[data-edit]")){openHabit(b.dataset.edit);return}
  if(b=t.closest("[data-day]")){openDay(+b.dataset.day);return}
@@ -431,6 +427,17 @@ document.addEventListener("click",e=>{const t=e.target;let b;
 $("notes").addEventListener("input",e=>{S.mn[nk()]=e.target.value;touch()});
 $("prev").onclick=()=>{let y=vy,m=vm-1;if(m<0){m=11;y--}setView(y,m);render()};
 $("next").onclick=()=>{let y=vy,m=vm+1;if(m>11){m=0;y++}setView(y,m);render()};
+$("yp").onclick=()=>{setView(vy-1,vm);render()};$("yn2").onclick=()=>{setView(vy+1,vm);render()};
+$("jt").onclick=()=>{reView();render();const t=todayD();if(t)openDay(t)};
+let pwo=0;const pwc=$("pwc");
+const wkS=dt=>{const d=new Date(dt);d.setHours(12,0,0,0);const w=d.getDay();d.setDate(d.getDate()-(S.cal==="j"?(w+1)%7:(w+6)%7));return d};
+const pwKey=()=>{const d=wkS(new Date());d.setDate(d.getDate()+7*pwo);return d};
+function drawPW(){const a=pwKey(),b=new Date(a);b.setDate(b.getDate()+6);const k=isoOf(a),e=S.pw[k]||{};
+ const F=[["p","🔥 The problem","What is going wrong or holding me back this week?"],["s","💡 Solution","What would actually fix it?"],["n","⚡ What can I do about it now?","The next concrete step(s)"],["d","✅ What have I done already?","Actions taken so far"]];
+ const hist=Object.keys(S.pw).sort().reverse().slice(0,8).map(q=>`<div class="je ${q===k?"act":""}" data-pww="${q}"><span class="jd">${dstr(q)}</span> ${esc((S.pw[q].p||"…").slice(0,70))}</div>`).join("");
+ pwc.innerHTML=`<h2>Problem of the week</h2><div class="row"><button data-pwo="-1">‹</button><b>${dstr(k)} → ${dstr(isoOf(b))}</b><button data-pwo="1">›</button>${pwo?'<button data-pwo="0">This week</button>':""}</div>`+F.map(f=>`<label>${f[1]}<textarea data-pf="${f[0]}" placeholder="${f[2]}">${esc(e[f[0]]||"")}</textarea></label>`).join("")+(hist?`<div class="mu" style="margin-top:10px">Past weeks</div>${hist}`:"")}
+pwc.addEventListener("input",e=>{const t=e.target.closest("[data-pf]");if(!t)return;const k=isoOf(pwKey()),o=S.pw[k]=S.pw[k]||{};o[t.dataset.pf]=t.value;if(!(o.p||o.s||o.n||o.d))delete S.pw[k];touch()});
+pwc.addEventListener("focusout",()=>setTimeout(()=>{if(!pwc.contains(document.activeElement))drawPW()},0));
 $("add").onclick=()=>openHabit(null);
 $("ro").onclick=()=>{reorder=!reorder;render()};
 const SD=$("side");let lp2=null,lp2f=false;const pbx=e=>e.target.closest("[data-ph]");
@@ -461,7 +468,7 @@ function takeRemote(d){S=norm(JSON.parse(d.data));S.updated=d.updated;S.synced=d
 function merge(L,R){const o=norm(JSON.parse(JSON.stringify(R)));
  L.habits.forEach(h=>{const i=o.habits.findIndex(x=>x.id===h.id);if(i<0)o.habits.push(h);else o.habits[i]=h});
  for(const h in L.log)for(const d in L.log[h]){(o.log[h]=o.log[h]||{})[d]=L.log[h][d]}
- Object.assign(o.dn,L.dn);Object.assign(o.mn,L.mn);o.cal=L.cal;return o}
+ Object.assign(o.dn,L.dn);Object.assign(o.mn,L.mn);Object.assign(o.pw,L.pw);o.cal=L.cal;return o}
 async function reconcile(){if(!user||!db)return;
  if(!navigator.onLine){setStat("☁ Offline");return}
  try{const snap=await ref().get();
