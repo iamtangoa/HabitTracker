@@ -284,3 +284,6 @@ Tap any **habit name** → all 12 months of the year in one poster-style layout 
 
 - Habits are listed as pills in a sticky top bar (the badge = ✓ days this year). Tap one to switch calendars, or swipe the calendar left/right on a phone. Your last choice is remembered.
 - Done days show a big **✓** (with the day number tiny in the corner and the score bottom-right); missed days show **×**.
+
+## 19. v12 — whole-year calendar fits the screen
+The selected habit's calendar now fills exactly the space under the tabs (no scrolling to see all 12 months). Everything else (Problem of the week, stats) is below it.

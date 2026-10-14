@@ -119,6 +119,7 @@ details summary{cursor:pointer;margin-top:10px;font-weight:600}.re{display:flex;
 .ht.act{background:linear-gradient(90deg,#2f7bff,#ff2e8a);color:#fff;border-color:transparent;box-shadow:0 0 12px #2f7bff66}.ht.act i{background:#0004;color:#fff}
 .yd .dn{position:absolute;top:0;left:1px;font-size:.5em;font-style:normal;font-weight:600;opacity:.75;line-height:1}.yd .mk{font-size:1.25em;font-weight:800;line-height:1}
 .yg.mini{grid-template-columns:repeat(3,1fr)}@media(min-width:700px){.yg.mini{grid-template-columns:repeat(4,1fr)}}@media(min-width:1100px){.yg.mini{grid-template-columns:repeat(4,1fr)}}
+#ycards{min-height:330px}#ycards .hc{display:flex;flex-direction:column;height:100%;box-sizing:border-box;margin:0}#ycards .hch{flex:none}
 </style></head><body>
 <div class="top">
   <h1><img src="icon-192.png" alt="" width="22" height="22" style="border-radius:5px" onerror="this.remove()">HABIT TRACKER</h1>
@@ -249,9 +250,9 @@ function render(){
  $("htabs").innerHTML=AL.map(q=>{const L=S.log[q.id]||{};let n=0;for(const k in L)if(k>=y0&&k<=y1&&L[k].s==="d")n++;return `<button class="ht ${q.id===sel?"act":""}" data-sel="${q.id}">${esc(q.n)}<i>${nd(n)}</i></button>`}).join("");
  const x=AL.find(q=>q.id===sel);let cards="";
  if(x){const Y=ycal(x,vy),sc=x.sec||"d",tl=sc!=="d"?SN[sc]:(x.per==="m"?x.t+"×/mo":x.t===7?"Daily":x.t+"×/wk")+((x.items||[]).length?" ☰":"");
-  cards=`<div class="hc"><div class="hch">${reorder?mvb(x.id):""}<button class="hn" data-yr="${x.id}" title="${esc(x.why||"")}">${x.why?"🎯 ":""}${esc(x.n)}</button><button class="tgb" data-edit="${x.id}">${tl}</button><span class="hcs"><b>${nd(Y.T.d)}</b> ✓ days in ${nd(vy)}${Y.T.d?" · avg "+nd(fmt(Y.T.sum/Y.T.d*10)):""}${sc==="d"?" · best chain "+nd(Y.best):""}</span>${sc==="d"?`<button data-yt="${x.id}">+ Today</button>`:""}</div><div class="yg mini" dir="${S.cal==="j"?"rtl":"ltr"}">${Y.out}</div></div>`}
+  cards=`<div class="hc"><div class="hch">${reorder?mvb(x.id):""}<button class="hn" data-yr="${x.id}" title="${esc(x.why||"")}">${x.why?"🎯 ":""}${esc(x.n)}</button><button class="tgb" data-edit="${x.id}">${tl}</button><span class="hcs"><b>${nd(Y.T.d)}</b> ✓ days in ${nd(vy)}${Y.T.d?" · avg "+nd(fmt(Y.T.sum/Y.T.d*10)):""}${sc==="d"?" · best chain "+nd(Y.best):""}</span>${sc==="d"?`<button data-yt="${x.id}">+ Today</button>`:""}</div><div class="yg" dir="${S.cal==="j"?"rtl":"ltr"}">${Y.out}</div></div>`}
  $("ycards").innerHTML=cards||'<div class="mu">No habits yet — tap “+ Habit”.</div>';
- const ta=$("htabs").querySelector(".act");if(ta&&ta.scrollIntoView)ta.scrollIntoView({inline:"center",block:"nearest"});
+ const ta=$("htabs").querySelector(".act");if(ta&&ta.scrollIntoView)ta.scrollIntoView({inline:"center",block:"nearest"});fit();
  let bars="",cap=0,goal=0,pts=0,days=0;
  H.forEach(x=>{const s=stats(x,n);cap+=s.cap;goal+=s.goal;pts+=s.raw;days+=s.days;bars+=`<div class="bar"><span>${esc(x.n)}</span><i><u style="width:${s.pct}%"></u></i><span>${s.pct}%</span></div>`});
  $("bars").innerHTML=bars||'<div class="mu">—</div>';
@@ -441,6 +442,8 @@ $("prev").onclick=()=>{let y=vy,m=vm-1;if(m<0){m=11;y--}setView(y,m);render()};
 $("next").onclick=()=>{let y=vy,m=vm+1;if(m>11){m=0;y++}setView(y,m);render()};
 $("yp").onclick=()=>{setView(vy-1,vm);render()};$("yn2").onclick=()=>{setView(vy+1,vm);render()};
 $("jt").onclick=()=>{reView();render();const t=todayD();if(t)openDay(t)};
+function fit(){const y=$("ycards");y.style.height="";const t=y.getBoundingClientRect().top+(window.scrollY||0);y.style.height=Math.max(330,(window.innerHeight||800)-t-8)+"px"}
+addEventListener("resize",fit);
 let tx=null;const yc=$("ycards");
 yc.addEventListener("touchstart",e=>{tx=e.touches[0].clientX},{passive:true});
 yc.addEventListener("touchend",e=>{if(tx==null)return;const dx=e.changedTouches[0].clientX-tx;tx=null;if(Math.abs(dx)<70)return;
